@@ -31,6 +31,10 @@ public class SkillEffect
     public virtual void ActiveEffect(BaseEntity actionEntity, BaseEntity targetEntity)
     {
     }
+    public virtual void ActiveEffect(BaseEntity targetEntity)
+    {
+    }
+
     public virtual void ActiveEffects(BaseEntity actionEntity, List<BaseEntity> targetEntitys)
     {
     }

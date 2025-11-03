@@ -8,7 +8,11 @@ public class RewardDatas : RewardData
 {
     public RewardData GetRewardData(int idx)
     {
-        return RewardDataMap[idx];
+        if (RewardDataMap.TryGetValue(idx, out RewardData data))
+            return data;
+
+        Debug.LogWarning($"RewardData not found: {idx}");
+        return null;
     }
 
     public List<RewardData> GetRewardGroupList(int groupId) //데이터 테이블에 적어둔 것들 중에서, 특정 groupId만 읽어서 리스트로 반환하는 메서드

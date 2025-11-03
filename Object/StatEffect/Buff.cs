@@ -15,22 +15,25 @@ public class TotalBuffStat
     public float critical = 0;
     public void Reset(EntityInfo entityInfo)
     {
-        damagedValue = 0;
+        speed = entityInfo.speed;
+        defense = entityInfo.defense;
+        attackDmg = entityInfo.attackDamage;
+        evasionUp = entityInfo.evasion;
+        if (entityInfo.equips != null)
+        {
+            for (int i = 0; i < entityInfo.equips.Length; i++)
+            {
+                if (entityInfo.equips[i] != null)
+                {
+                    speed += entityInfo.equips[i].speed;
+                    defense += entityInfo.equips[i].def;
+                    attackDmg += entityInfo.equips[i].attack;
+                    evasionUp += entityInfo.equips[i].eva;
+                }
+            }
+        }
 
-        //if (entityInfo.equipWeapon != null)
-        //{
-        //    speed = entityInfo.speed + entityInfo.equipWeapon.speed;
-        //    defense = entityInfo.defense + entityInfo.equipWeapon.defense;
-        //    attackDmg = entityInfo.attackDamage + entityInfo.equipWeapon.attackDmg;
-        //    evasionUp = entityInfo.evasion + entityInfo.equipWeapon.evasion;
-        //}
-        //else
-        //{
-        //    speed = entityInfo.speed;
-        //    defense = entityInfo.defense;
-        //    attackDmg = entityInfo.attackDamage;
-        //    evasionUp = entityInfo.evasion;
-        //}
+
         damagedValue = 0;
         totalWeight = 0;
     }
@@ -70,27 +73,33 @@ public class Buff
                 //공격력 × (1 - 감소비율) hp -= (((dmg + a )- (def + a)) * 계수 +  고정) * 2
                 case BuffType.AttackUp:
                     totalStat.attackDmg = (int)((totalStat.attackDmg * _entityCurrentStatus[i].adRatio + _entityCurrentStatus[i].constantValue));
+                    _totalWeight += 0.1f;
                     break;
                 //(스탯 × 계수) + 고정수치 (각 항목별 동일 방식 적용)
                 case BuffType.AllStatUp:
                     totalStat.attackDmg = (int)((totalStat.attackDmg * _entityCurrentStatus[i].adRatio + _entityCurrentStatus[i].constantValue));
                     totalStat.speed += _entityCurrentStatus[i].constantValue;
                     totalStat.evasionUp = (int)((totalStat.evasionUp * _entityCurrentStatus[i].adRatio + _entityCurrentStatus[i].constantValue));
+                    _totalWeight += 0.1f;
                     break;
                 //(치명타율% × 계수) + 고정수치 (소수점은 버림)
                 case BuffType.CriticalUp:
                     totalStat.critical = (int)((totalStat.critical * _entityCurrentStatus[i].adRatio + _entityCurrentStatus[i].constantValue));
+                    _totalWeight += 0.1f;
                     break;
                 //(회피율 % × 계수) +고정수치(소수점은 버림)
                 case BuffType.EvasionUp:
                     totalStat.evasionUp = (int)((totalStat.evasionUp * _entityCurrentStatus[i].adRatio + _entityCurrentStatus[i].constantValue));
+                    _totalWeight += 0.1f;
                     break;
                 //방어력 × (1 - 감소비율)
                 case BuffType.DefenseUp:
                     totalStat.defense = (int)((totalStat.defense * _entityCurrentStatus[i].adRatio + _entityCurrentStatus[i].constantValue));
+                    _totalWeight += 0.1f;
                     break;
                 case BuffType.SpeedUp:
                     totalStat.speed += _entityCurrentStatus[i].constantValue;
+                    _totalWeight += 0.1f;
                     break;
             }
 
@@ -100,6 +109,7 @@ public class Buff
                 //공격력 × (1 - 감소비율)
                 case DeBuffType.AttackDown:
                     totalStat.attackDmg = (int)(totalStat.attackDmg * (1f - _entityCurrentStatus[i].adRatio));
+                    _totalWeight += 0.05f;
                     break;
                 //각 스탯 × 계수→ 각 스탯 × (1 - 감소비율)
                 case DeBuffType.AllStatDown:
@@ -107,25 +117,32 @@ public class Buff
                     totalStat.evasionUp = (int)(totalStat.evasionUp * (1f - _entityCurrentStatus[i].adRatio));
                     totalStat.critical = (int)(totalStat.critical * (1f - _entityCurrentStatus[i].adRatio));
                     totalStat.attackDmg = (int)(totalStat.attackDmg * (1f - _entityCurrentStatus[i].adRatio));
+                    _totalWeight += 0.05f;
                     break;
                 //치명타율 × (1 - 감소비율)→ 소수점 이하 버림
                 case DeBuffType.CriticalDown:
                     totalStat.critical = (int)(totalStat.critical * (1f - _entityCurrentStatus[i].adRatio));
+                    _totalWeight += 0.05f;
                     break;
                 //회피율 × (1 - 감소비율)→ 소수점 이하 버림
                 case DeBuffType.EvasionDown:
                     totalStat.evasionUp = (int)(totalStat.evasionUp * (1f - _entityCurrentStatus[i].adRatio));
+                    _totalWeight += 0.05f;
                     break;
                 //방어력 × (1 - 감소비율)
                 case DeBuffType.DefenseDown:
                     totalStat.defense = (int)(totalStat.defense * (1f - _entityCurrentStatus[i].adRatio));
+                    _totalWeight += 0.05f;
                     break;
                 //스피드 - 감소 수치
                 case DeBuffType.SpeedDown:
                     totalStat.speed -= _entityCurrentStatus[i].constantValue;
+                    _totalWeight += 0.05f;
                     break;
+                // 출혈, 화상 중첩 데미지
                 case DeBuffType.Damaged:
-                    totalStat.damagedValue = _entityCurrentStatus[i].constantValue;
+                    totalStat.damagedValue += _entityCurrentStatus[i].constantValue;
+                    _totalWeight += 0.05f;
                     break;
             }
         }
@@ -136,7 +153,7 @@ public class Buff
     {
         foreach (var item in buffTypes)
         {
-            for (int i = 0; i < _entityCurrentStatus.Count; i++)
+            for (int i = 0; i < _entityCurrentStatus.Count;)
             {
                 if (_entityCurrentStatus[i].buffType == item)
                 {
@@ -144,14 +161,21 @@ public class Buff
                     if (_entityCurrentStatus[i].duration <= 0)
                     {
                         _entityCurrentStatus.Remove(_entityCurrentStatus[i]);
-                        break;
                     }
+                    else
+                    {
+                        i++;
+                    }
+                }
+                else
+                {
+                    i++;
                 }
             }
         }
         foreach (var item in deBuffTypes)
         {
-            for (int i = 0; i < _entityCurrentStatus.Count; i++)
+            for (int i = 0; i < _entityCurrentStatus.Count;)
             {
                 if (_entityCurrentStatus[i].deBuffType == item)
                 {
@@ -159,6 +183,10 @@ public class Buff
                     if (_entityCurrentStatus[i].duration <= 0)
                     {
                         _entityCurrentStatus.Remove(_entityCurrentStatus[i]);
+                    }
+                    else
+                    {
+                        i++;
                     }
                 }
                 else

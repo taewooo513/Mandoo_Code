@@ -31,26 +31,11 @@ public class EnemyAppear : MonoBehaviour
             // 모든 스폰 위치에 적이 있으면 소환하지 않음
             if (spawnIndex >= spawnPoints.Length)
             {
-                //Debug.Log($"모든 스폰 위치에 적이 있습니다. {enemyPrefabs[i].name} 소환 불가.");
                 continue;
             }
 
-            //if (enemyPrefabs[i] == null)
-            //{
-            //    //Debug.LogError($"프리팹이 연결되지 않았습니다: {i}");
-            //    continue;
-            //}
-
             GameObject obj = Instantiate(enemyPrefabs[i], spawnPoints[spawnIndex].position, Quaternion.identity);
             spawnedEnemies.Add(obj);
-        }
-    }
-
-    private void Update()
-    {
-        if (Input.GetKeyDown(KeyCode.E))
-        {
-            SpawnEnemies();
         }
     }
 }

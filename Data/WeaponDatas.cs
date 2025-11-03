@@ -7,6 +7,7 @@ public class WeaponDatas : WeaponData
 {
     public WeaponData GetWeaponData(int idx)
     {
-        return WeaponDataMap[idx];
+        WeaponDataMap.TryGetValue(idx, out WeaponData val);
+        return val;
     }
 }

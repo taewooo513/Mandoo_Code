@@ -8,6 +8,6 @@ public class TrapCrashCheck : MonoBehaviour
     
     public void OnTriggerEnter2D(Collider2D other)
     {
-        trap.TrapActive(GameManager.Instance.PlayableCharacter[0]); //제일 앞에 있는 플레이어 넘겨서 트랩 활성화
+        trap.TrapActive(GameManager.Instance.playableCharacter[0]); //제일 앞에 있는 플레이어 넘겨서 트랩 활성화
     }
 }

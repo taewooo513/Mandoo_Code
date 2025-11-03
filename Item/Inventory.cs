@@ -1,21 +1,32 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 
 public class Inventory
 {
-    private Item[] items;
+    private InGameItem[] items;
     public Inventory()
     {
-        items = new Item[10];
+        items = new InGameItem[10];
     }
 
-    public Item GetItem(int index)
+    public void ClearItem()
     {
+        for (int i = 0; i < items.Length; i++)
+        {
+            items[i] = null;
+        }
+    }
+
+    public InGameItem GetItem(int index)
+    {
+        Debug.Log(index);
         return items[index];
     }
+    public InGameItem[] GetItems()
+    {
+        return items;
+    }
 
-    public Item FindItem(Item item)
+    public InGameItem FindItem(InGameItem item)
     {
         for (int i = 0; i < items.Length; i++)
         {
@@ -30,7 +41,7 @@ public class Inventory
         return null;
     }
 
-    public void AddItem(Item item, int index)
+    public void AddItem(InGameItem item, int index)
     {
         if (items[index] == null)
         {
@@ -43,7 +54,7 @@ public class Inventory
         (items[idx1], items[idx2]) = (items[idx2], items[idx1]);
     }
 
-    public void SawpItem(Item item1, Item item2)
+    public void SawpItem(InGameItem item1, InGameItem item2)
     {
         for (int i = 0; i < items.Length; i++)
         {
@@ -58,13 +69,132 @@ public class Inventory
         }
     }
 
-    public void MergeItem(Item targetItem, Item addItem)
+    public void MergeItem(int index1, int index2)
     {
-
+        int val = items[index1].GetItem(items[index2].count);
+        items[index2].RemoveItem(items[index2].count - val);
     }
 
-    public void UseItem(Item item)
+    public void MergeItem(InGameItem item1, InGameItem item2)
     {
-        item.UseItem();
+        int val = item1.GetItem(item2.count);
+        item2.RemoveItem(item2.count - val);
+    }
+
+    public void UseItem(InGameItem item, int amount)
+    {
+        item.UseItem(amount);
+    }
+
+    public void RemoveItem(InGameItem item)
+    {
+        for (int i = 0; i < items.Length; i++)
+        {
+            if (item == items[i])
+            {
+                items[i] = null;
+                return;
+            }
+        }
+    }
+
+    public void UseGold(int amount)
+    {
+        int val = amount;
+        if (IsUseGold(amount))
+        {
+            for (int i = items.Length - 1; i >= 0; i--)
+            {
+                if (items[i] != null)
+                {
+                    if (items[i].GetItemInfo.type == ItemType.Gold)
+                    {
+                        int temp = items[i].count;
+                        items[i].RemoveItem(val);
+                        val -= temp;
+                        if (val <= 0)
+                        {
+                            return;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    public bool PushBackItem(InGameItem item)
+    {
+        for (int i = 0; i < items.Length; i++)
+        {
+            if (items[i] != null)
+            {
+                if (items[i].GetItemInfo.id == item.GetItemInfo.id)
+                {
+                    MergeItem(items[i], item);
+                    if (item == null)
+                    {
+                        return true;
+                    }
+                    else
+                    {
+                        if (item.count == 0)
+                        {
+                            return true;
+                        }
+                    }
+                }
+            }
+        }
+        for (int i = 0; i < items.Length; i++)
+        {
+            if (items[i] == null)
+            {
+                items[i] = item;
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public bool IsUseGold(int amount)
+    {
+        if (GetTotalCoin() < amount)
+        {
+            return false;
+        }
+        return true;
+    }
+    public int GetTotalCoin()
+    {
+        int totalCoin = 0;
+        foreach (var item in items)
+        {
+            if (item != null)
+            {
+                if (item.GetItemInfo.type == ItemType.Gold)
+                {
+                    totalCoin += item.count;
+                }
+            }
+        }
+        return totalCoin;
+    }
+    public InGameItem BoomBreakToolCheck()
+    {
+        InGameItem item = null;
+        for (int i = 0; i < items.Length; i++)
+        {
+            if (items[i] != null)
+            {
+                if (items[i].GetItemInfo.type == ItemType.Consumable)
+                {
+                    if (items[i].GetItemInfo.consumableType == ConsumableType.ExplorerSupport)
+                    {
+                        item = items[i];
+                    }
+                }
+            }
+        }
+        return item;
     }
 }

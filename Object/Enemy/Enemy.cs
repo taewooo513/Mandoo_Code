@@ -1,8 +1,6 @@
 ﻿using UnityEngine;
 using System.Collections.Generic;
 using DataTable;
-using System.Linq;
-using UnityEditorInternal;
 using System;
 
 public class Enemy : BaseEntity
@@ -12,13 +10,19 @@ public class Enemy : BaseEntity
     private bool _hasExtraTurn = true;
     private Skill _attackSkill;
     [SerializeField] private int initID;
+    InGameEnemyUI enemyUI;
+    
     private void Start()
     {
         characterAnimationController = GetComponentInChildren<EnemyCharacterAnimationController>();
         //Init(initID);
+        enemyUI = UIManager.Instance.OpenUI<InGameEnemyUI>();
+        if (enemyUI)
+            enemyUI.CloseUI();
     }
     public override void Init(int idx)
     {
+        base.Init(idx);
         SetData(idx);
         buffIcons.UpdateIcon(entityInfo.statEffect);
     }
@@ -28,9 +32,20 @@ public class Enemy : BaseEntity
         this.id = idx;
         _data = DataManager.Instance.Enemy.GetEnemyData(idx);
         entityInfo = new EntityInfo(
-            _data.name, _data.health, _data.attack, _data.defense, _data.speed, _data.evasion, _data.critical, _data.gameObjectString, _data.roleType
+            _data.name, _data.health, _data.attack, _data.defense, _data.speed, _data.evasion, _data.critical, _data.gameObjectPrefabString, _data.roleType, ""
         );
         entityInfo.SetUpSkill(_data.skillId, this);
+        AssetSetting();
+    }
+
+    public override void AssetSetting()
+    {
+        if (id != 0)
+        {
+            string enemyPrefabPath = DataManager.Instance.Enemy.GetEnemyData(id).gameObjectPrefabString;
+            GameObject modelPrefab = Resources.Load<GameObject>(enemyPrefabPath);
+            Instantiate(modelPrefab, transform);
+        }
     }
 
     public override void StartTurn()
@@ -55,7 +70,6 @@ public class Enemy : BaseEntity
             BattleManager.Instance.EndTurn(false);
             return;
         }
-
         foreach (var item in _attackSkill.skillInfo.skillEffects) //스킬효과를 돌면서
         {
             var effectType = item.GetEffectType(); //스킬 효과 타입 챙겨오기
@@ -141,6 +155,10 @@ public class Enemy : BaseEntity
         {
             characterAnimationController.Damaged();
         }
+
+        if (enemyUI.nowEntity == entityInfo)
+            enemyUI.UpdateUI(entityInfo);
+
         else if (entityInfo.isDie)
         {
             characterAnimationController.Die();
@@ -149,18 +167,17 @@ public class Enemy : BaseEntity
 
     public override void StartExtraTurn() //추가 공격 턴
     {
+        extraTurnText.OnExtraTurn();
         isNowExtraTurn = true;
-        if (TryAttack(out int position)) //공격 시도 성공시
+        base.StartTurn();
+        entityInfo.statEffect.AttackWeight(entityInfo);
+        if (entityInfo.IsStun())
         {
+            BattleManager.Instance.EndTurn(false);
+            return;
         }
-        else //공격 실패 시
-        {
-            if (position != -1)
-            {
-                BattleManager.Instance.SwitchPosition(this, position); //이동
-                BattleManager.Instance.EndTurn();
-            }
-        }
+
+        EnemyAction();
     }
 
     private Skill GetRandomSkill()
@@ -222,25 +239,32 @@ public class Enemy : BaseEntity
         return false;
     }
 
-    public override void UseSkill(Action action, BaseEntity baseEntity)
+    public override void UseSkill(Action action, BaseEntity baseEntity, Skill skill)
     {
-        base.UseSkill(action, baseEntity);
-        characterAnimationController.Attack(action, baseEntity);
+        base.UseSkill(action, baseEntity, skill);
+        characterAnimationController.Attack(action, baseEntity, skill);
     }
-    public override void UseSkill(Action action, List<BaseEntity> baseEntitys)
+    public override void UseSkill(Action action, List<BaseEntity> baseEntitys, Skill skill)
     {
-        base.UseSkill(action, baseEntitys);
-        characterAnimationController.Attack(action, baseEntitys);
+        base.UseSkill(action, baseEntitys, skill);
+        characterAnimationController.Attack(action, baseEntitys, skill);
     }
 
     private bool TryAttack(out int position) //스킬 선택, 타겟 선택
     {
+        if (_attackSkill == null)
+        {
+            position = -1;
+            return false;
+        }
+
         var info = _attackSkill.skillInfo; //사용할 스킬 정보
         List<int> targetRange =
             BattleManager.Instance.GetPossibleSkillRange(info.targetPos ?? new List<int>(), BattleManager.Instance.PlayableCharacters[0]); //타겟 가능한 범위 가져오기
-        List<float> weights = BattleManager.Instance.GetWeightList(true); //타겟 가중치 리스트 가져옴
-        int pickedIndex = RandomizeUtility.TryGetRandomPlayerIndexByWeight(weights); //가중치 기반으로 랜덤하게 플레이어 인덱스를 선택
-
+        
+        List<float> weights = BattleManager.Instance.GetWeightList(true, targetRange); //타겟 가중치 리스트 가져옴
+        int pickedIndex = RandomizeUtility.TryGetRandomPlayerIndexByWeight(weights, targetRange); //가중치 기반으로 랜덤하게 플레이어 인덱스를 선택
+        
         var targetEntity = BattleManager.Instance.PlayableCharacters[pickedIndex]; //타겟
         //TargetCheckUI(targetEntity);
         if (CanUseSkill(_attackSkill))
@@ -264,7 +288,7 @@ public class Enemy : BaseEntity
         var info = _attackSkill.skillInfo; //사용할 스킬 정보
         List<int> targetRange =
             BattleManager.Instance.GetPossibleSkillRange(info.targetPos ?? new List<int>(), BattleManager.Instance.EnemyCharacters[0]); //타겟 가능한 범위 가져오기
-        List<float> weights = BattleManager.Instance.GetWeightList(false); //타겟 가중치 리스트 가져옴
+        List<float> weights = BattleManager.Instance.GetWeightList(false, targetRange); //타겟 가중치 리스트 가져옴
         int pickedIndex = RandomizeUtility.TryGetRandomPlayerIndexByWeight(weights); //가중치 기반으로 랜덤하게 플레이어 인덱스를 선택
         BaseEntity targetEntity;
         //teawoong
@@ -291,6 +315,7 @@ public class Enemy : BaseEntity
     public override void Attack(float dmg, BaseEntity targetEntity) //적->플레이어 공격
     {
         int index = Utillity.GetIndexInListToObject(BattleManager.Instance.PlayableCharacters, targetEntity);
+        if (index == -1) return;
         BattleManager.Instance.AttackEntity(index, (int)dmg); //범위/단일 공격 처리는 skill에서 되어있음
     }
 

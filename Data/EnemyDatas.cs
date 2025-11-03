@@ -9,4 +9,9 @@ public class EnemyDatas : EnemyData
     {
         return EnemyDataMap[idx];
     }
+
+    public bool HasKey(int idx)
+    {
+        return EnemyDataMap.ContainsKey(idx);
+    }
 }

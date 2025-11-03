@@ -17,6 +17,9 @@ public class Singleton<T> : MonoBehaviour where T : Singleton<T>
             return instance;
         }
     }
+    public void Init()
+    {
+    }
     protected virtual void Awake()
     {
         if (instance == null)

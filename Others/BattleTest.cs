@@ -12,11 +12,4 @@ public class BattleTest : MonoBehaviour
         if (DataManager.Instance != null)
             DataManager.Instance.Initialize();
     }
-    public void Update()
-    {
-        if (Input.GetKeyDown(KeyCode.K))
-        {
-            BattleManager.Instance.BattleStartTrigger(player, enemies);
-        }
-    }
 }

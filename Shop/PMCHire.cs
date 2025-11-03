@@ -23,50 +23,56 @@ public class PMCHire : MonoBehaviour
         }
         Instance = this;
     }
-    
+
     // 고용(소환)
-    public void SpawnPMC(int initID, int contractGold)
+    public bool SpawnPMC(int initID, int contractGold)
     {
         Debug.Log(initID + "번 PMC 고용 시도");
         // 1. GameManager 플레이어 리스트에서 중복 체크 (id 기준)
         if (GameManager.Instance.HasPlayerById(initID))
         {
-            return;
+            AudioManager.Instance.PlaySfx(AudioInfo.Instance.shopDenySfx, AudioInfo.Instance.shopDenySfxVolume);
+            return false;
         }
-        if (GameManager.Instance.PlayableCharacter.Count >= spawnPoints.Length)
+        if (GameManager.Instance.playableCharacter.Count >= spawnPoints.Length)
         {
+            AudioManager.Instance.PlaySfx(AudioInfo.Instance.shopDenySfx, AudioInfo.Instance.shopDenySfxVolume);
             Debug.Log("PMC 자리가 꽉찼습니다!");
-            return;
+            return false;
         }
-        //bool goldUsed = InventoryManager.Instance.UseGole(contractGold);
-        //if (!goldUsed)
-        //{
-        //    Debug.LogWarning("골드 부족! 고용실패!");
-        //    return;
-        //}
+        if (!InGameItemManager.Instance.IsUseGold(contractGold))
+        {
+            AudioManager.Instance.PlaySfx(AudioInfo.Instance.shopDenySfx, AudioInfo.Instance.shopDenySfxVolume);
+            Debug.LogWarning("골드 부족! 고용실패!");
+            return false;
+        }
+        AudioManager.Instance.PlaySfx(AudioInfo.Instance.shopBuySfx, AudioInfo.Instance.shopBuySfxVolume);
+        InGameItemManager.Instance.UseGold(contractGold);
+        GameObject pmc = Instantiate(playerPrefab, spawnPoints[GameManager.Instance.playableCharacter.Count], Quaternion.identity);
+        UIManager.Instance.CloseUI<MapUI>();
+        UIManager.Instance.OpenUI<InGameInventoryUI>();
+        if (AnalyticsManager.Instance.Step == 15)
+            AnalyticsManager.Instance.SendEventStep(16);
 
-        // 3. 생성 및 등록
-        GameObject pmc = Instantiate(playerPrefab, spawnPoints[GameManager.Instance.PlayableCharacter.Count], Quaternion.identity);
-
+        UIManager.Instance.OpenUI<InGameUIManager>().RemoveSkillButton();
 
         var playable = pmc.GetComponent<PlayableCharacter>();
         if (playable != null)
         {
-            playable.SetData(initID);
+            playable.Init(initID);
             GameManager.Instance.AddPlayer(playable);
-            
+            return true;
         }
-        else
-        {
-            Debug.LogError("PlayableCharacter 컴포넌트가 프리팹에 없습니다!");
-        }
-        PMCCardManager.Instance.RefreshCardsOnPanel();
+
+        Debug.LogError("PlayableCharacter 컴포넌트가 프리팹에 없습니다!");
+        return false;
+
     }
 
     public void RemovePlayerAt(int index)
     {
-        var list = GameManager.Instance.PlayableCharacter;
-        
+        var list = GameManager.Instance.playableCharacter;
+
 
         if (index < 0 || index >= list.Count)
         {
@@ -91,15 +97,14 @@ public class PMCHire : MonoBehaviour
         Destroy(playable.gameObject);
 
         UpdatePlayerPositions();
-        PMCCardManager.Instance.RefreshCardsOnPanel();
     }
 
     private void UpdatePlayerPositions()
     {
-        for (int i = 0; i < GameManager.Instance.PlayableCharacter.Count; i++)
+        for (int i = 0; i < GameManager.Instance.playableCharacter.Count; i++)
         {
-            GameManager.Instance.PlayableCharacter[i].transform.position = spawnPoints[i]; // 위치 재조정
+            GameManager.Instance.playableCharacter[i].transform.position = spawnPoints[i]; // 위치 재조정
         }
-    }  
+    }
 }
 

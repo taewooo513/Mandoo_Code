@@ -1,9 +1,11 @@
 ﻿using System.Collections.Generic;
+using System.Data;
 using UnityEngine;
 
-public class MapGenerator : MonoBehaviour
+public class MapGenerator
 {
     private readonly List<BaseRoom> _rooms = new();
+    private readonly Dictionary<(int, int), BaseRoom> _intsRoomDictionary = new();
     private DataTable.MapData _mapData;
     private int _battleRoomCount;
     private int _itemRoomCount;
@@ -14,10 +16,69 @@ public class MapGenerator : MonoBehaviour
     private int _additionalPathCount;
     private float _pathProb;
 
+
+    public List<BaseRoom> GenerateTutorialMap()
+    {
+        _rooms.Clear();
+        _intsRoomDictionary.Clear();
+        
+        var startRoom = new StartRoom();
+        _rooms.Add(startRoom);
+        startRoom.RoomLocation = "";
+        _intsRoomDictionary.Add((0,0), startRoom);
+        
+        //---Room1, PMC---//
+        var pmcRoom = new PmcRoom();
+        RoomDirection direction = RoomDirection.Right;
+        _rooms.Add(pmcRoom);
+        ConnectRoomForTutorial(startRoom, pmcRoom, direction, 3, TutorialCorridorInit.Trap);
+        
+        //---Room2, Shop---//
+        var shopRoom = new ShopRoom();
+        direction = RoomDirection.Right;
+        _rooms.Add(shopRoom);
+        ConnectRoomForTutorial(pmcRoom, shopRoom, direction, 3, TutorialCorridorInit.Treasure);
+        
+        //---Room3, Village---//
+        var villageRoom = new VillageRoom();
+        direction = RoomDirection.Right;
+        _rooms.Add(villageRoom);
+        ConnectRoomForTutorial(shopRoom, villageRoom, direction, 3, TutorialCorridorInit.Empty);
+        villageRoom.Init(1004);
+        //배틀 데이터 넣어줘야함.
+        return _rooms;
+    }
+    public List<BaseRoom> GenerateBattleTestMap(List<int> playerIds, List<int> enemieIds)
+    {
+        _rooms.Clear();
+        _intsRoomDictionary.Clear();
+        
+        var battleRoom = new BattleRoom();
+        _rooms.Add(battleRoom);
+        battleRoom.BattleTestInit(playerIds,enemieIds);
+        battleRoom.RoomLocation = "";
+        _intsRoomDictionary.Add((0,0), battleRoom);
+        _roomCount--;
+        return _rooms;
+    }
+    public List<BaseRoom> GenerateBattleTestMap(List<int> playerIds, List<int> enemyIds, 
+        List<(int, int, int, int, float, float)> playerStatInfo, List<(int, int, int, int, float, float)> enemyStatInfo)
+    {
+        _rooms.Clear();
+        _intsRoomDictionary.Clear();
+        
+        var battleRoom = new BattleRoom();
+        _rooms.Add(battleRoom);
+        battleRoom.BattleTestInit(playerIds,enemyIds, playerStatInfo, enemyStatInfo);
+        battleRoom.RoomLocation = "";
+        _intsRoomDictionary.Add((0,0), battleRoom);
+        _roomCount--;
+        return _rooms;
+    }
     public List<BaseRoom> GenerateMap(DataTable.MapData mapData)
     {
         //-----Initialize-----//
-
+        
         _mapData = mapData;
         _roomCount = _mapData.totalCnt;
         _battleRoomCount = _mapData.battleCnt;
@@ -27,6 +88,8 @@ public class MapGenerator : MonoBehaviour
         _emptyRoomCount = _mapData.emptyCnt;
         _additionalPathCount = _mapData.additionalPathCnt;
         _pathProb = _mapData.pathProp;
+        _rooms.Clear();
+        _intsRoomDictionary.Clear();
 
         //---Initialize End---//
 
@@ -34,10 +97,10 @@ public class MapGenerator : MonoBehaviour
 
         var startRoom = new StartRoom();
         _rooms.Add(startRoom);
-        _roomCount--;
         startRoom.RoomLocation = "";
+        _intsRoomDictionary.Add((0,0), startRoom);
+        _roomCount--;
         GenerateRoom(startRoom, ref recentlyListedRooms, true);
-        //Debug.Log(startRoom + " " + startRoom.RoomLocation);
 
         while (_roomCount > 1)
         {
@@ -69,11 +132,9 @@ public class MapGenerator : MonoBehaviour
         {
             List<RoomDirection> possibleDirection = GetPossibleDirection(connectableRoom);
             if (possibleDirection.Count != 0) return connectableRoom;
-            char[] possibleLocationArray = connectableRoom.RoomLocation.ToCharArray();
-            for (int i = 0; i < possibleLocationArray.Length; i++)
-            {
-                connectableRoom = FindRoomWithString(connectableRoom.RoomLocation.Remove(connectableRoom.RoomLocation.Length - 1, 1));
-            }
+            
+            string shortenedLocation = connectableRoom.RoomLocation.Remove(connectableRoom.RoomLocation.Length - 1, 1);
+            connectableRoom = FindRoomWithString(shortenedLocation);
         }
 
         List<BaseRoom> tempList = new List<BaseRoom>();
@@ -87,19 +148,13 @@ public class MapGenerator : MonoBehaviour
 
     private BaseRoom FindRoomWithString(string roomLocation)
     {
-        foreach (var item in _rooms)
-        {
-            if (item.RoomLocation == roomLocation) return item;
-        }
-        return null;
+        var location = GetRoomLocation(roomLocation);
+        return FindRoomWithLocation(location);
     }
 
     private BaseRoom FindRoomWithLocation((int, int) location)
     {
-        foreach (var item in _rooms)
-        {
-            if (GetRoomLocation(item.RoomLocation) == location) return item;
-        }
+        if (_intsRoomDictionary.TryGetValue(location, out BaseRoom room)) return room;
         return null;
     }
 
@@ -119,7 +174,7 @@ public class MapGenerator : MonoBehaviour
             RoomDirection direction = possibleDirection[Random.Range(0, possibleDirection.Count)];
             possibleDirection.Remove(direction);
             List<RoomType> possibleRoomType = GetPossibleRoomType();
-            RoomType randomRoomType = possibleRoomType[Random.Range(0, possibleRoomType.Count)];
+            RoomType randomRoomType = isFirstRoom ? RoomType.PMC : possibleRoomType[Random.Range(0, possibleRoomType.Count)];
             BaseRoom room = null;
             switch (randomRoomType)
             {
@@ -132,13 +187,13 @@ public class MapGenerator : MonoBehaviour
                     break;
                 case RoomType.Battle:
                     room = new BattleRoom();
-                    room.Init(DataManager.Instance.Battle.GetRandomDataIDByType(EventType.Battle)); 
-                    //todo : 데이터테이블에 enum주고, 배틀룸 1001~1003 랜덤으로 하나 뽑아서 줘야됨
+                    int battleId = GetEnemyWeight(); 
+                    room.Init(battleId); //기존 : DataManager.Instance.Battle.GetRandomDataIDByType(EventType.Battle)
                     _battleRoomCount--;
                     break;
                 case RoomType.Item:
                     room = new TreasureRoom();
-                    room.Init(DataManager.Instance.Battle.GetRandomDataIDByType(EventType.Treasure));
+                    room.Init(2001); //기존 : DataManager.Instance.Battle.GetRandomDataIDByType(EventType.Treasure) <<보물룸은 2001번밖에 없어서 하드코딩으로 수정
                     _itemRoomCount--;
                     break;
                 case RoomType.Shop:
@@ -172,22 +227,33 @@ public class MapGenerator : MonoBehaviour
         RoomDirection direction = possibleDirection[Random.Range(0, possibleDirection.Count)];
 
         var villageRoom = new VillageRoom();
-        int battleId = DataManager.Instance.Battle.GetRandomDataIDByType(EventType.Battle);
+        int battleId = DataManager.Instance.Battle.GetRandomDataIDByType(EventType.Boss);
         villageRoom.Init(battleId);
         _rooms.Add(villageRoom);
         ConnectRoom(parentRoom, villageRoom, direction);
-        //Debug.Log(villageRoom + " " + villageRoom.RoomLocation);
     }
     private void ConnectRoom(BaseRoom parentRoom, BaseRoom childRoom, RoomDirection direction, bool isConnectCorridorOnly = false)
     {
         var corridor = parentRoom.MakeConnection(childRoom, direction);
         childRoom.ApplyConnection(parentRoom, GetOppositeDirection(direction), corridor);
-        if (isConnectCorridorOnly)
+        
+        if (isConnectCorridorOnly) _additionalPathCount--;
+        else
         {
-            //Debug.Log("Corridor between " + parentRoom + "(" + parentRoom.RoomLocation + ") and " + childRoom + "(" + childRoom.RoomLocation +") has been connected");
-            _additionalPathCount--;
+            string location = childRoom.SetRoomLocation(parentRoom, direction);
+            var locationInt = GetRoomLocation(location);
+            _intsRoomDictionary.Add(locationInt, childRoom);
         }
-        if (!isConnectCorridorOnly) childRoom.SetRoomLocation(parentRoom, direction);
+    }
+
+    private void ConnectRoomForTutorial(BaseRoom parentRoom, BaseRoom childRoom, RoomDirection direction, 
+        int index, TutorialCorridorInit init)
+    {
+        var corridor = parentRoom.MakeConnectionForTutorial(childRoom, direction, index, init);
+        childRoom.ApplyConnection(parentRoom, GetOppositeDirection(direction), corridor);
+        string location = childRoom.SetRoomLocation(parentRoom, direction);
+        var locationInt = GetRoomLocation(location);
+        _intsRoomDictionary.Add(locationInt, childRoom);
     }
 
     private RoomDirection GetOppositeDirection(RoomDirection direction)
@@ -201,45 +267,27 @@ public class MapGenerator : MonoBehaviour
         List<RoomDirection> possibleDirection = new();
 
         (int, int) location = GetRoomLocation(room.RoomLocation);
-        if (IsLocationPossible((location.Item1 + 1, location.Item2)))
-        {
-            possibleDirection.Add(RoomDirection.Right);
-        }
-        else
-        {
-            BaseRoom locatedRoom = FindRoomWithLocation((location.Item1 + 1, location.Item2));
-            if (locatedRoom != null && _additionalPathCount > 0 && CalculateProbability() && !room.IsConnected(locatedRoom, RoomDirection.Right)) ConnectRoom(room, locatedRoom, RoomDirection.Right, true);
-        }
+        
+        List<(int,int, RoomDirection)> possibleLocationList = new();
+        possibleLocationList.Add((-1, 0, RoomDirection.Left));
+        possibleLocationList.Add((1, 0, RoomDirection.Right));
+        possibleLocationList.Add((0, 1, RoomDirection.Up));
+        possibleLocationList.Add((0, -1, RoomDirection.Down));
 
-        if (IsLocationPossible((location.Item1 - 1, location.Item2)))
+        foreach (var (dx, dy, dir) in possibleLocationList)
         {
-            possibleDirection.Add(RoomDirection.Left);
+            if(IsLocationPossible((location.Item1 + dx, location.Item2 + dy)))
+            {
+                possibleDirection.Add(dir);
+            }
+            else
+            {
+                BaseRoom locatedRoom = FindRoomWithLocation((location.Item1 + dx, location.Item2 + dy));
+                if (locatedRoom != null && !room.IsConnected(locatedRoom, dir) && _additionalPathCount > 0 && CalculateProbability() )
+                    ConnectRoom(room, locatedRoom, dir, true);
+            }
         }
-        else
-        {
-            BaseRoom locatedRoom = FindRoomWithLocation((location.Item1 - 1, location.Item2));
-            if (locatedRoom != null && _additionalPathCount > 0 && CalculateProbability() && !room.IsConnected(locatedRoom, RoomDirection.Left)) ConnectRoom(room, locatedRoom, RoomDirection.Left, true);
-        }
-
-        if (IsLocationPossible((location.Item1, location.Item2 + 1)))
-        {
-            possibleDirection.Add(RoomDirection.Up);
-        }
-        else
-        {
-            BaseRoom locatedRoom = FindRoomWithLocation((location.Item1, location.Item2 + 1));
-            if (locatedRoom != null && _additionalPathCount > 0 && CalculateProbability() && !room.IsConnected(locatedRoom, RoomDirection.Up)) ConnectRoom(room, locatedRoom, RoomDirection.Up, true);
-        }
-
-        if (IsLocationPossible((location.Item1, location.Item2 - 1)))
-        {
-            possibleDirection.Add(RoomDirection.Down);
-        }
-        else
-        {
-            BaseRoom locatedRoom = FindRoomWithLocation((location.Item1, location.Item2 - 1));
-            if (locatedRoom != null && _additionalPathCount > 0 && CalculateProbability() && !room.IsConnected(locatedRoom, RoomDirection.Down)) ConnectRoom(room, locatedRoom, RoomDirection.Down, true);
-        }
+        
         return possibleDirection;
     }
 
@@ -293,13 +341,24 @@ public class MapGenerator : MonoBehaviour
 
     private bool IsLocationPossible((int, int) targetLocationInt)
     {
-        foreach (var item in _rooms)
+        return !_intsRoomDictionary.ContainsKey(targetLocationInt);
+    }
+
+    private int GetEnemyWeight()
+    {
+        //var type = DataManager.Instance.Battle.GetRandomDataIDByType(EventType.Battle);
+        int groupId = 1; //몬스터 그룹id 더 추가할거면 관련된 로직 작업 더 필요함
+        var enemyGroupList = DataManager.Instance.Battle.GetEnemyGroupIdList(groupId);
+        List<float> enemyAppearWeight = new List<float>();
+
+        for (int i = 0; i < enemyGroupList.Count; i++)
         {
-            if (GetRoomLocation(item.RoomLocation) == targetLocationInt)
-            {
-                return false;
-            }
+            enemyAppearWeight.Add(enemyGroupList[i].emergeProb);
         }
-        return true;
+        int battleRoomIndex = RandomizeUtility.TryGetRandomPlayerIndexByWeight(enemyAppearWeight);
+
+        int battleRoomId = enemyGroupList[battleRoomIndex].id;
+        
+        return battleRoomId;
     }
 }

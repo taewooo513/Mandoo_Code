@@ -5,47 +5,48 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class PMCInfo : BaseEntity
+public class PMCInfo : MonoBehaviour
 {
-    private MercenaryData data;
-
-    public TextMeshProUGUI nameText;
-    public TextMeshProUGUI roleTypeText;
-    public TextMeshProUGUI contractGoldText;
-
-    [SerializeField] private int initID; // 용병 id
-    public int InitID => initID;
-
-    public void Start()
+    private MercenaryData _data;
+    private int _initID;
+    [SerializeField] private TextMeshProUGUI nameText;
+    [SerializeField] private TextMeshProUGUI roleTypeText;
+    [SerializeField] private TextMeshProUGUI contractGoldText;
+    private InGamePMCUI _inGamePmcui;
+    private string playerIconPath;
+    public Image selectedPlayerIcon;
+    
+    public void Init(MercenaryData data, InGamePMCUI inGamePmcui)
     {
-        SetData(initID);
+        _data = data;
+        _inGamePmcui = inGamePmcui;
+        SetData();
     }
-
-    private void SetData(int id)
+    private void SetData()
     {
-        this.id = id;
-        data = DataManager.Instance.Mercenary.GetMercenaryData(id);
-
-        entityInfo = new EntityInfo(
-            data.name, data.health, data.attack, data.defense, data.speed, data.evasion, data.critical, data.gameObjectString, data.roleType
-        );
+        _initID = _data.id;
 
         if (nameText != null)
-            nameText.text = data.name;
+            nameText.text = _data.name;
         if (roleTypeText != null)
-            roleTypeText.text = data.roleType.ToString();
+            roleTypeText.text = _data.roleType.ToString();
         if (contractGoldText != null)
-            contractGoldText.text = data.contractGold.ToString();
-    }
-    public void RefreshCardActive()
-    {
-        bool hasPlayer = GameManager.Instance.HasPlayerById(initID);
-        gameObject.SetActive(!hasPlayer);
+            contractGoldText.text = _data.contractGold.ToString() + "G";
+        playerIconPath = _data.gameObjectString;
+        SetImage(playerIconPath);
     }
 
     public void OnClickHire()// 고용 버튼 클릭
     {
-        PMCHire.Instance.SpawnPMC(initID, data.contractGold);
+        if(PMCHire.Instance.SpawnPMC(_initID, _data.contractGold)) _inGamePmcui.RefreshCardsOnPanel();
+    }
+    
+    public void SetImage(string path)
+    {
+        if (selectedPlayerIcon != null && path != null)
+        {
+            selectedPlayerIcon.sprite = Resources.Load<Sprite>(path);
+        }
     }
 }
 

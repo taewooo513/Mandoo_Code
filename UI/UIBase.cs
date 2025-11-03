@@ -12,8 +12,8 @@ public class UIBase : MonoBehaviour
 
     public void CloseUI()
     {
-        gameObject.SetActive(false);
         OnClose();
+        gameObject.SetActive(false);
     }
 
     protected virtual void OnOpen()

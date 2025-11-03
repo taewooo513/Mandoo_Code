@@ -10,6 +10,7 @@ using UnityEngine;
 using UnityEngine.Playables;
 using UnityEngine.SceneManagement;
 using UnityEngine.UIElements;
+using DataTable;
 
 public class BattleManager : Singleton<BattleManager>
 {
@@ -19,20 +20,31 @@ public class BattleManager : Singleton<BattleManager>
     public List<BaseEntity> _enemyCharacters;
     public List<BaseEntity> EnemyCharacters => _enemyCharacters;
 
-    private BaseEntity nowTurnEntity;
-    public BaseEntity NowTurnEntity { get { return nowTurnEntity; } }
-
-    public bool isEndTrun = false;
+    public bool isUseItem = false;
+    private BaseEntity _nowTurnEntity;
+    public BaseEntity NowTurnEntity { get { return _nowTurnEntity; } }
+    private BattleData _battleData;
+    private List<InGameItem> _equipItem = new();
+    public bool isEndTurn = false;
+    private bool _isExtraTurn;
     private System.Random _random = new System.Random();
     private Queue<BaseEntity> _turnQueue;
     public GameObject blackOutImage;
-    public bool IsBattleStarted = false;
+    public bool isBattleStarted = false;
+    public bool isCorridorBattle = false;
+    public int HitEnemyCount = 0;
+    public event Action OnTurnEnded; // 턴 종료 시 알림 이벤트
     protected override void Awake()
     {
         base.Awake();
         _playableCharacters = new List<BaseEntity>();
         _enemyCharacters = new List<BaseEntity>();
         _turnQueue = new Queue<BaseEntity>();
+        InstantiateBlackOutImage();
+    }
+
+    public void InstantiateBlackOutImage()
+    {
         blackOutImage = Instantiate(Resources.Load<GameObject>("UIPrefabs/BlackOutImage"));
         blackOutImage.SetActive(false);
     }
@@ -53,10 +65,37 @@ public class BattleManager : Singleton<BattleManager>
         return sum / (_playableCharacters.Count + _enemyCharacters.Count);
     }
 
-    public void BattleStartTrigger(List<BaseEntity> playerList, List<BaseEntity> enemyList)
+    public void OnceUseItem() // 1회 아이템 사용시 
     {
-        AudioManager.Instance.PlaySound("Sounds/BattleStartBGM");
+        if (isBattleStarted == true)
+        {
+            isUseItem = true;
+        }
+        else
+        {
+            isUseItem = false;
+        }
+    }
 
+    private void HasExtraTurn()
+    {
+        if (_isExtraTurn)
+        {
+            _isExtraTurn = false;
+            return;
+        }
+        float averageSpeed = GetAverageSpeed();
+        float targetFloat = (_nowTurnEntity.entityInfo.GetTotalBuffStat().speed - averageSpeed) * 0.1f;
+        _isExtraTurn = targetFloat >= UnityEngine.Random.value;
+    }
+
+    public void BattleStartTrigger(List<BaseEntity> playerList, List<BaseEntity> enemyList, BattleData battleData = null)
+    {
+        _playableCharacters.Clear();
+        Debug.Log("BattleStartTrigger");
+        HitEnemyCount = 0;
+        AudioManager.Instance.PlaySfx(AudioInfo.Instance.battleStartSfx, AudioInfo.Instance.battleStartSfxVolume);
+        AchievementManager.Instance.SetParam("receivedDamage", 0);
         foreach (var item in playerList)
         {
             _playableCharacters.Add(item);
@@ -68,9 +107,16 @@ public class BattleManager : Singleton<BattleManager>
             _enemyCharacters.Add(item);
             item.BattleStarted();
         }
+        _battleData = battleData;
+        Tutorials.ShowIfNeeded<BattleTutorial>();
         UIManager.Instance.OpenUI<InGameBattleStartUI>(); //전투 시작 UI 출력
-        IsBattleStarted = true;
+        isBattleStarted = true;
         _turnQueue.Clear();
+        //Turn(false);
+    }
+
+    public void StartTurn()
+    {
         Turn(false);
     }
 
@@ -96,27 +142,69 @@ public class BattleManager : Singleton<BattleManager>
     }
     private void Turn(bool isExtra) //한 턴
     {
+        //GameManager.Instance.playableCharacter = _playableCharacters;
+        if (!isBattleStarted || _playableCharacters.Count == 0 || _enemyCharacters.Count == 0)
+        {
+            return;
+        }
+
         if (_turnQueue.Count == 0)
         {
             SetTurnQueue();
         }
-        nowTurnEntity = _turnQueue.Peek();
+
+
+        while (_turnQueue.Count > 0)
+        {
+            _nowTurnEntity = _turnQueue.Peek();
+            if (_nowTurnEntity == null || _nowTurnEntity.gameObject == null)
+            {
+                _turnQueue.Dequeue();
+                continue;
+            }
+
+            bool isAlive = false;
+            if (_nowTurnEntity is PlayableCharacter)
+            {
+                isAlive = _playableCharacters.Contains(_nowTurnEntity);
+            }
+            else
+            {
+                isAlive = _enemyCharacters.Contains(_nowTurnEntity);
+            }
+
+            if (!isAlive)
+            {
+                _turnQueue.Dequeue();
+                continue;
+            }
+
+            break;
+        }
+
+        if (_turnQueue.Count == 0)
+        {
+            SetTurnQueue();
+            if (_turnQueue.Count == 0) return;
+            _nowTurnEntity = _turnQueue.Peek();
+        }
+
         if (isExtra)
         {
-            nowTurnEntity.StartExtraTurn();
+            _nowTurnEntity.StartExtraTurn();
         }
         else
         {
-            nowTurnEntity.StartTurn();
+            _nowTurnEntity.StartTurn();
         }
     }
 
-    public void EndTurn(bool hasExtraTurn = false)
+    public void EndTurn(bool canHaveExtraTurn = false)
     {
+        //GameManager.Instance.playableCharacter = _playableCharacters;
         if (_playableCharacters.Count == 0)
         {
             Lose();
-            AudioManager.Instance.PlaySound("Sounds/AllDeadBGM");
         }
         else if (_enemyCharacters.Count == 0)
         {
@@ -124,20 +212,22 @@ public class BattleManager : Singleton<BattleManager>
         }
         else
         {
-            if (hasExtraTurn)
+            HasExtraTurn();
+            if (canHaveExtraTurn && _isExtraTurn)
             {
-                nowTurnEntity.EndTurn();
+                _nowTurnEntity.EndTurn();
             }
             else
             {
-                nowTurnEntity.EndTurn();
-                _turnQueue.Dequeue();
+                _nowTurnEntity.EndTurn();
+                if (_turnQueue != null)
+                    _turnQueue.Dequeue();
             }
             DieEntity();
+            OnTurnEnded?.Invoke();
             if (_playableCharacters.Count == 0)
             {
                 Lose();
-                AudioManager.Instance.PlaySound("Sounds/AllDeadBGM");
             }
             else if (_enemyCharacters.Count == 0)
             {
@@ -145,7 +235,7 @@ public class BattleManager : Singleton<BattleManager>
             }
             else
             {
-                StartCoroutine(NextTurn(hasExtraTurn));
+                StartCoroutine(NextTurn(canHaveExtraTurn && _isExtraTurn));
             }
         }
     }
@@ -153,6 +243,7 @@ public class BattleManager : Singleton<BattleManager>
     IEnumerator NextTurn(bool extraTurn)
     {
         yield return new WaitForSeconds(1f);
+        //GameManager.Instance.playableCharacter = _playableCharacters;
         Turn(extraTurn);
     }
     //private void BattleRun()
@@ -166,42 +257,29 @@ public class BattleManager : Singleton<BattleManager>
     private void Win()
     {
         Debug.Log("승리! 버닝썬");
-        //승리 UI 출력
-        //foreach (var item in _playableCharacters) //전투 승리 시 아군 전체에게 숙련도 20 지금
-        //{
-        //    if (item.entityInfo.equipWeapon != null)
-        //        item.entityInfo.equipWeapon.AddWeaponExp(20);
-        //}
-        //UIManager.Instance.CloseUI<InGameEnemyUI>();
-        //UIManager.Instance.OpenUI<InGameVictoryUI>();
+        AudioManager.Instance.PlayBGM(AudioInfo.Instance.battleClearSfx, AudioInfo.Instance.battleClearSfxVolume);
 
-        EndBattle();
-    }
+        if (_playableCharacters.Count == 1)
+        {
+            AchievementManager.Instance.SetParam("soloVictory", 1);
+        }
 
-    private void Lose()
-    {
-        Debug.Log("패배...");
-        //패배 UI출력
-        //todo : 적 처리한 캐릭터한테만 숙련도 줘야됨. How? //연출 이후 고민해보기
+        DropItem();
+        AddWeaponExpOnWin();
+        AchievementManager.Instance.AddParam("winCount", 1);
         UIManager.Instance.CloseUI<InGameEnemyUI>();
-        //UIManager.Instance.CloseUI<InGameInventoryUI>();
-        UIManager.Instance.OpenUI<MapUI>();
-        UIManager.Instance.OpenUI<InGameLoseUI>();
-        EndBattle();
-        SceneManager.LoadScene("1.Scenes/IntroScene");
-        //런 결과 UI 출력
+        UIManager.Instance.OpenUI<InGameVictoryUI>(); //승리 UI 출력
+                                                      //GameManager.Instance.playableCharacter = _playableCharacters;
 
-    }
-
-    private void EndBattle()
-    {
-        //TODO: 전투가 끝났을 때 공통적으로 해야하는 것...?
         List<BaseEntity> playerList = new();
         foreach (var item in _playableCharacters)
         {
             playerList.Add(item);
         }
         GameManager.Instance.PlayableCharacterPosition(playerList); //현재 플레이어 위치 넘기기
+
+        EndBattle();
+
         if (MapManager.Instance.CurrentLocation is BattleRoom battleRoom)
         {
             battleRoom.BattleEnd();
@@ -210,6 +288,33 @@ public class BattleManager : Singleton<BattleManager>
         {
             villageRoom.BattleEnd();
         }
+    }
+
+    private void Lose()
+    {
+        Debug.Log("패배...");
+        if (HitEnemyCount == 0)
+            AchievementManager.Instance.AddParam("noHitDefeat", 1);
+        EndBattle();
+        GameManager.Instance.GameFinish(false);
+    }
+
+    private IEnumerator PlayCorridorBGMAfterDelay(float delay) //통로 전투가 일어났을 경우, 전투 끝나고 통로BGM으로 바꾸기
+    {
+        yield return new WaitForSeconds(delay);
+        AudioManager.Instance.PlayBGM(AudioInfo.Instance.corridorBGM, AudioInfo.Instance.corridorBGMVolume);
+    }
+
+    public void EndBattle()
+    {
+        //TODO: 전투가 끝났을 때 공통적으로 해야하는 것...?
+        isUseItem = false;
+        if (isCorridorBattle)
+        {
+            StartCoroutine(PlayCorridorBGMAfterDelay(3f));
+            isCorridorBattle = false;
+        }
+
         foreach (var item in _playableCharacters)
         {
             item.Release();
@@ -220,12 +325,24 @@ public class BattleManager : Singleton<BattleManager>
             item.Release();
         }
 
-        IsBattleStarted = false;
+        isBattleStarted = false;
+
         _playableCharacters.Clear();
         _enemyCharacters.Clear();
-        GameManager.Instance.EnemyCharacter.Clear();
+        GameManager.Instance.enemyCharacter.Clear();
+        if (AnalyticsManager.Instance.Step == 25)
+            AnalyticsManager.Instance.SendEventStep(26);
     }
 
+    private void AddWeaponExpOnWin()
+    {
+        var gameDataSkillExp = GameManager.Instance.gameDatas.GetGameData(GameManager.Instance.CurrentMapIndex).battleWinExp;
+        foreach (var item in _playableCharacters) //전투 승리 시 아군 전체에게 숙련도 지금
+        {
+            if (item.entityInfo.equips[0] != null)
+                item.entityInfo.equips[0].AddWeaponExp(gameDataSkillExp);
+        }
+    }
     private void SetTurnQueue() //한번 섞은 후, 순서별 정렬, 플레이어 우선 정렬
     {
         int n = _playableCharacters.Count;
@@ -300,9 +417,15 @@ public class BattleManager : Singleton<BattleManager>
     //특정 Entity를 보내면 Position을 return합니다.
     public int? FindEntityPosition(BaseEntity baseEntity)
     {
+        if (baseEntity == null) return null;
         if (baseEntity is PlayableCharacter)
         {
-            return _playableCharacters.IndexOf(baseEntity);
+            if (isBattleStarted == true)
+            {
+                return _playableCharacters.IndexOf(baseEntity);
+            }
+
+            return GameManager.Instance.playableCharacter.IndexOf(baseEntity);
         }
 
         return _enemyCharacters.IndexOf(baseEntity);
@@ -310,7 +433,7 @@ public class BattleManager : Singleton<BattleManager>
 
     public void AttackEntity(BaseEntity baseEntity)
     {
-        baseEntity.Damaged(nowTurnEntity.entityInfo.GetTotalBuffStat().attackDmg);
+        baseEntity.Damaged(_nowTurnEntity.entityInfo.GetTotalBuffStat().attackDmg);
     }
 
     private void OnDestroy()
@@ -347,12 +470,22 @@ public class BattleManager : Singleton<BattleManager>
 
     public void AttackEntity(int index, float attackDamage)
     {
-        if (nowTurnEntity is PlayableCharacter)
+        if (_nowTurnEntity is PlayableCharacter)
         {
+            if (index < 0 || index >= _enemyCharacters.Count)
+            {
+                Debug.LogWarning($"[AttackEntity] 잘못된 enemy index: {index}, Count: {_enemyCharacters.Count}");
+                return;
+            }
             _enemyCharacters[index].Damaged(attackDamage);
         }
         else
         {
+            if (index < 0 || index >= _playableCharacters.Count)
+            {
+                Debug.LogWarning($"[AttackEntity] 잘못된 enemy index: {index}, Count: {_enemyCharacters.Count}");
+                return;
+            }
             _playableCharacters[index].Damaged(attackDamage);
         }
     }
@@ -386,7 +519,7 @@ public class BattleManager : Singleton<BattleManager>
     //범위 공격에 적합한 타입입니다.
     public void AttackEntity(List<int> indexList, float attackDamage)
     {
-        if (nowTurnEntity is PlayableCharacter)
+        if (_nowTurnEntity is PlayableCharacter)
         {
             foreach (var index in indexList)
             {
@@ -434,7 +567,7 @@ public class BattleManager : Singleton<BattleManager>
     //자기 자신->this, enablePos List 보내주세요 -> 쓸 수 있는지 안되는지 알려줍니다.
     public bool IsEnablePos(BaseEntity entity, List<int> posList)
     {
-        if (nowTurnEntity is PlayableCharacter)
+        if (_nowTurnEntity is PlayableCharacter)
         {
             foreach (var item in posList)
             {
@@ -460,7 +593,7 @@ public class BattleManager : Singleton<BattleManager>
 
     public bool IsTargetInList(List<int> targetPos)
     {
-        if (nowTurnEntity is PlayableCharacter)
+        if (_nowTurnEntity is PlayableCharacter)
         {
             foreach (var item in targetPos)
             {
@@ -540,11 +673,63 @@ public class BattleManager : Singleton<BattleManager>
             }
         }
 
-        if (indexA == -1 || indexB == -1) return;
+        if (indexA == -1 || indexB == -1)
+        {
+            Debug.LogWarning("SwitchPlayerPosition: indexA or indexB is -1");
+            return;
+        }
+
         _playableCharacters[indexA] = playableCharacterB;
         _playableCharacters[indexB] = playableCharacterA;
-
         SwapEntityTransform(playableCharacterA, playableCharacterB);
+        foreach (var item in _playableCharacters)
+        {
+            Debug.Log(item.entityInfo.name);
+        }
+    }
+
+    private void DropItem()
+    {
+        if (_battleData == null) return;
+        var rewardGroupId = _battleData.rewardId;
+
+        var dropGoldCount = _battleData.dropGold;
+        var dropItem = _battleData.dropId; //드랍하는 아이템id (골드x)
+        var battleDropProb = _battleData.dropProb; //아이템 드랍 확률 (ex : 0.25)
+        var goldRandomRatio = UnityEngine.Random.Range(0.9f, 1.1f); //0.9~1.1 사이 랜덤 난수 반환, 골드 떨어지는 랜덤 개수
+        var randomGoldDropCount = (int)(dropGoldCount * goldRandomRatio); //실제로 떨어지는 금화 개수
+        var randomPercentage = UnityEngine.Random.Range(0f, 100f);
+
+        InGameItem[] items = new InGameItem[10];
+        items[0] = InGameItemManager.Instance.AddItem(1001, randomGoldDropCount); //랜덤 개수대로 보상 ui에 골드 아이템 추가
+        if (randomPercentage < battleDropProb) //드랍 확률대로 아이템 떨어짐 (ex : 0.25% 확률로 아이템 떨어짐)
+        {
+            items[1] = InGameItemManager.Instance.AddItem(dropItem, 1); //보상 ui에 아이템 추가
+        }
+
+        _equipItem = GameManager.Instance.deadEquipWeapons;
+        if (_equipItem.Count != 0)
+        {
+            int idx = 0;
+            if (items[1] != null)
+                idx = 2;
+            else //살짝 위험한 코드
+                idx = 1;
+
+            for (int i = 0; i < _equipItem.Count; i++) //'죽은 플레이어가 죽기 전 가지고있던 장비' 리스트 순회하면서
+            {
+                if (idx >= items.Length) break; //최대 개수 넘어가면 break
+
+                if (_equipItem[i] != null)
+                {
+                    items[idx] = _equipItem[i]; //보상 ui에 장비 추가하기
+                    idx++;
+                }
+            }
+        }
+        UIManager.Instance.UIGet<InGameVictoryUI>().Setting(items); //ui에 아이템 넣어주기
+
+        _equipItem.Clear(); //장비 리스트 초기화
     }
 
     //게임 오브젝트의 위치를 바꿔줍니다.
@@ -622,18 +807,19 @@ public class BattleManager : Singleton<BattleManager>
         }
     }
 
-    public List<float> GetWeightList(bool isPlayer) //타겟 가중치 리스트
+    public List<float> GetWeightList(bool isPlayer, List<int> targetRange) //타겟 가중치 리스트
     {
+        // 공격류 스킬
         if (isPlayer)
         {
-            foreach (var item in _playableCharacters)
+            foreach (var target in targetRange)
             {
-                item.entityInfo.GetPlayableTargetWeight(); //playable 가중치 가져오기
+                _playableCharacters[target].entityInfo.GetPlayableTargetWeight(); //playable 가중치 가져오기
             }
 
             return GenerateWeightListUtility.GetWeights();
         }
-
+        //지원류 스킬
         foreach (var item in _enemyCharacters)
         {
             item.entityInfo.GetEnemyTargetWeight(); //enemy 가중치 가져오기
@@ -641,31 +827,50 @@ public class BattleManager : Singleton<BattleManager>
         return GenerateWeightListUtility.GetWeights();
     }
 
+
     public void EntityDead(BaseEntity entity)
     {
+        if (entity == null) return;
+
         var index = FindEntityPosition(entity);
         if (index == null) return;
+
         if (entity is PlayableCharacter)
         {
+            if (index >= _playableCharacters.Count) return;
+
             for (int i = (int)index; i < _playableCharacters.Count - 1; i++)
             {
                 SwitchPosition(entity, i + 1);
             }
+
+            RemoveDeadEntityFromTurnQueue(entity);
             _playableCharacters.RemoveAt(_playableCharacters.Count - 1);
             entity.Release();
-            Destroy(entity.gameObject);
+
+            if (entity.gameObject != null)
+            {
+                Destroy(entity.gameObject, 1.0f);
+            }
             return;
         }
+
+        if (index >= _enemyCharacters.Count) return;
 
         for (int i = (int)index; i < _enemyCharacters.Count - 1; i++)
         {
             SwitchPosition(entity, i + 1);
         }
+
         RemoveDeadEntityFromTurnQueue(entity);
         //TODO: 이후 적 사망시 보상 연결은 여기서? 아니면 Enemy에서?
         entity.Release();
         _enemyCharacters.RemoveAt(_enemyCharacters.Count - 1);
-        Destroy(entity.gameObject);
+
+        if (entity.gameObject != null)
+        {
+            Destroy(entity.gameObject, 1.0f);
+        }
     }
 
     private void RemoveDeadEntityFromTurnQueue(BaseEntity entity)

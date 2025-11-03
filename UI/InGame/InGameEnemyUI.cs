@@ -12,8 +12,10 @@ public class InGameEnemyUI : UIBase
     public TextMeshProUGUI defenseText;
     public TextMeshProUGUI speedText;
 
+    public EntityInfo nowEntity;
     public void UpdateUI(EntityInfo entityInfo)
     {
+        nowEntity = entityInfo;
         nameText.text = entityInfo.name;
         hpText.text = entityInfo.currentHp.ToString();
         maxHpText.text = entityInfo.maxHp.ToString();

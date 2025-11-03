@@ -7,6 +7,9 @@ public class MapUIContentGenerator : MonoBehaviour
     [SerializeField] private GameObject roomPrefab;
     [SerializeField] private GameObject corridorPrefab;
     [SerializeField] private Transform elements;
+    [SerializeField] private Transform roomElements;
+    [SerializeField] private Transform corridorElements;
+    [SerializeField] private RectTransform mapUIContent;
     private Transform _content;
     private List<BaseRoom> _rooms = new();
     private List<(BaseRoom, int, int)> _roomPositions = new();
@@ -36,7 +39,8 @@ public class MapUIContentGenerator : MonoBehaviour
         FillRoomPositionList();
         foreach (var item in _roomPositions)
         {
-            var go = Instantiate(roomPrefab, elements);
+            //방 UI 생성
+            var go = Instantiate(roomPrefab, roomElements);
             var rt = go.GetComponent<RectTransform>();
             if (rt != null)
             {
@@ -46,70 +50,64 @@ public class MapUIContentGenerator : MonoBehaviour
             roomUI.Init(item.Item1);
             roomUIList.Add(roomUI);
 
+            //복도 UI 생성
             var corridors = item.Item1.corridors;
-            if (corridors.ContainsKey(RoomDirection.Left) && !corridors[RoomDirection.Left].IsAlreadyMade)
+            var directionList = new List<RoomDirection>();
+            directionList.Add(RoomDirection.Left);
+            directionList.Add(RoomDirection.Right);
+            directionList.Add(RoomDirection.Up);
+            directionList.Add(RoomDirection.Down);
+            
+            foreach(var direction in directionList)
             {
-                var go2 = Instantiate(corridorPrefab, elements);
-                corridors[RoomDirection.Left].IsAlreadyMade = true;
-                var rt2 = go2.GetComponent<RectTransform>();
-                if (rt2 != null)
-                {
-                    rt2.anchoredPosition = new Vector2(_xPos * item.Item2-150, _yPos * item.Item3);
-                }
+               if(!corridors.ContainsKey(direction) || corridors[direction].IsAlreadyMade) continue;
+               
+               var go2 = Instantiate(corridorPrefab, corridorElements);
+               corridors[direction].IsAlreadyMade = true;
+               var rt2 = go2.GetComponent<RectTransform>();
+               if(rt2 != null)
+               {
+                   int xOffset;
+                   switch (direction)
+                   {
+                       case RoomDirection.Left:
+                           xOffset = -150;
+                           break;
+                       case RoomDirection.Right:
+                           xOffset = 150;
+                           break;
+                       default:
+                           xOffset = 0;
+                           break;
+                   }
 
-                CorridorUI ui = go2.GetComponent<CorridorUI>();
-                ui.RearrangeCells(RoomDirection.Left);
-                corridorUIList.Add(ui);
-            }
-
-            if (corridors.ContainsKey(RoomDirection.Right) && !corridors[RoomDirection.Right].IsAlreadyMade)
-            {
-                var go2 = Instantiate(corridorPrefab, elements);
-                corridors[RoomDirection.Right].IsAlreadyMade = true;
-                var rt2 = go2.GetComponent<RectTransform>();
-                if (rt2 != null)
-                {
-                    rt2.anchoredPosition = new Vector2(_xPos * item.Item2+150, _yPos * item.Item3);
-                }
-                CorridorUI ui = go2.GetComponent<CorridorUI>();
-                ui.RearrangeCells(RoomDirection.Right);
-                corridorUIList.Add(ui);
-            }
-
-            if (corridors.ContainsKey(RoomDirection.Up) && !corridors[RoomDirection.Up].IsAlreadyMade)
-            {
-                var go2 = Instantiate(corridorPrefab, elements);
-                corridors[RoomDirection.Up].IsAlreadyMade = true;
-                var rt2 = go2.GetComponent<RectTransform>();
-                if (rt2 != null)
-                {
-                    rt2.anchoredPosition = new Vector2(_xPos * item.Item2, _yPos * item.Item3+150);
-                    rt2.rotation = Quaternion.Euler(0, 0, 90);
-                }
-                CorridorUI ui = go2.GetComponent<CorridorUI>();
-                ui.RearrangeCells(RoomDirection.Up);
-                corridorUIList.Add(ui);
-            }
-
-            if (corridors.ContainsKey(RoomDirection.Down) && !corridors[RoomDirection.Down].IsAlreadyMade)
-            {
-                var go2 = Instantiate(corridorPrefab, elements);
-                corridors[RoomDirection.Down].IsAlreadyMade = true;
-                var rt2 = go2.GetComponent<RectTransform>();
-                if (rt2 != null)
-                {
-                    rt2.anchoredPosition = new Vector2(_xPos * item.Item2, _yPos * item.Item3-150);
-                    rt2.rotation = Quaternion.Euler(0, 0, 90);
-                }
-                CorridorUI ui = go2.GetComponent<CorridorUI>();
-                ui.RearrangeCells(RoomDirection.Down);
-                corridorUIList.Add(ui);
+                   int yOffset;
+                   switch (direction)
+                   {
+                       case RoomDirection.Up:
+                           yOffset = 150;
+                           break;
+                       case RoomDirection.Down:
+                           yOffset = -150;
+                           break;
+                       default:
+                           yOffset = 0;
+                           break;
+                   }
+                   rt2.anchoredPosition = new Vector2(_xPos * item.Item2 + xOffset, _yPos * item.Item3 + yOffset);
+                   if(direction == RoomDirection.Up || direction == RoomDirection.Down)
+                       rt2.rotation = Quaternion.Euler(0, 0, 90);
+               }
+               CorridorUI ui = go2.GetComponent<CorridorUI>();
+               ui.RearrangeCells(direction); 
+               corridorUIList.Add(ui);
             }
         }
         var elementRt = elements.GetComponent<RectTransform>();
         elementRt.anchoredPosition = new Vector2((xMax+xMin) * -150, (yMax + yMin) * -150);
         var contentRt = _content.GetComponent<RectTransform>();
-        contentRt.sizeDelta = new Vector2((xMax - xMin) * 300 + 200, (yMax - yMin) * 300 + 200);
+        contentRt.sizeDelta = new Vector2((xMax - xMin) * 300 + 500, (yMax - yMin) * 300 + 500);
+        mapUIContent.anchoredPosition = new Vector2(-elementRt.anchoredPosition.x, -elementRt.anchoredPosition.y);
     }
 
     private void FillRoomPositionList()

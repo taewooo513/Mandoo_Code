@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 
 [Serializable]
 public class EntityInfo
@@ -26,14 +27,14 @@ public class EntityInfo
     public bool canMove = true;
     public int contractGold;
     public string gameObjectString;
-
+    public Weapon[] equips;
     public TotalBuffStat GetTotalBuffStat()
     {
         statEffect.AttackWeight(this);
         return statEffect.totalStat;
     }
 
-    public EntityInfo(string name, int maxHp, int attackDamage, int defense, int speed, float evasion, float critical, string iconPath, RoleType role)
+    public EntityInfo(string name, int maxHp, int attackDamage, int defense, int speed, float evasion, float critical, string gameObjectPath, RoleType role, string iconPath)
     {
         this.name = name;
         this.maxHp = maxHp;
@@ -44,14 +45,16 @@ public class EntityInfo
         this.evasion = evasion;
         this.critical = critical;
         statEffect = new Buff();
-        this.gameObjectString = iconPath;
+        this.gameObjectString = gameObjectPath;
+        this.iconPath = iconPath;
         this.role = role;
+        equips = new Weapon[3];
     }
 
     public void Damaged(float value)
     {
-        var hp = currentHp - value;
-        currentHp = (int)hp;
+        var hp = currentHp - (int)value;
+        currentHp = hp;
         if (currentHp <= 0)
         {
             currentHp = 0;
@@ -59,6 +62,16 @@ public class EntityInfo
         }
     }
 
+    public void SetStatInfoForBattleTest((int, int, int, int, float, float) playerStatInfo)
+    {
+        maxHp = playerStatInfo.Item1;
+        currentHp = maxHp;
+        attackDamage = playerStatInfo.Item2;
+        defense = playerStatInfo.Item3;
+        speed = playerStatInfo.Item4;
+        evasion = playerStatInfo.Item5;
+        critical = playerStatInfo.Item6;
+    }
     public float GetPlayableTargetWeight() //플레이어블 캐릭터의 타깃 가중치 합
     {
         float result = _standardWeight + statEffect.totalStat.totalWeight; //가중치 합
@@ -96,7 +109,7 @@ public class EntityInfo
 
     public void SetUpSkill(List<int> skillIdList, BaseEntity nowEntity)
     {
-        skills = new Skill[skillIdList.Count];
+        skills = new Skill[skillIdList.Count + 1];
         for (int i = 0; i < skillIdList.Count; i++)
         {
             skills[i] = new Skill();
@@ -111,6 +124,9 @@ public class EntityInfo
         {
             currentHp = maxHp;
         }
+        UIManager.Instance.CloseUI<StopCATutorial>();
+        UIManager.Instance.OpenUI<InGamePlayerUI>().UpdateUI();
+        GameManager.Instance.playerCanMove = true;
     }
     public void AddEffect(BuffInfo statEffectInfo)
     {
@@ -125,6 +141,8 @@ public class EntityInfo
 
 public class BaseEntity : MonoBehaviour
 {
+    [SerializeField] protected ExtraTurnText extraTurnText;
+    public EvasionText evasionText;
     [SerializeField] public EntityInfo entityInfo;
     protected bool isNowExtraTurn = false;
     public EntityInfo GetEntityInfo
@@ -137,6 +155,7 @@ public class BaseEntity : MonoBehaviour
     public Action<BaseEntity> OnDied;
     protected BuffIcons buffIcons;
     public EntityCharacterAnimationController characterAnimationController;
+
     protected virtual void Awake()
     {
         SetData();
@@ -146,7 +165,10 @@ public class BaseEntity : MonoBehaviour
 
     public virtual void Init(int id)
     {
+    }
 
+    public virtual void AssetSetting()
+    {
     }
 
     public virtual void Release()
@@ -178,12 +200,12 @@ public class BaseEntity : MonoBehaviour
     {
 
     }
-    public virtual void UseSkill(Action action, BaseEntity baseEntity)
+    public virtual void UseSkill(Action action, BaseEntity baseEntity, Skill skill)
     {
 
     }
 
-    public virtual void UseSkill(Action action, List<BaseEntity> baseEntitys)
+    public virtual void UseSkill(Action action, List<BaseEntity> baseEntitys, Skill skill)
     {
 
     }
@@ -192,7 +214,14 @@ public class BaseEntity : MonoBehaviour
         entityInfo.AddEffect(statEffectInfo);
         buffIcons.UpdateIcon(entityInfo.statEffect);
     }
-
+    public void Update()
+    {
+        if (Input.GetKeyDown(KeyCode.L))
+        {
+            if (entityInfo.equips[0] != null)
+                entityInfo.equips[0].AddWeaponExp(111);
+        }
+    }
     public virtual void Heal(float value)
     {
         entityInfo.Heal(value);

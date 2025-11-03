@@ -11,7 +11,8 @@ public enum RoleType
     Nuker,
     Initiator,
     Lurker,
-    Supporter
+    Supporter,
+    Boss
 }
 [UGS(typeof(EffectType))]
 public enum EffectType
@@ -21,7 +22,15 @@ public enum EffectType
     Buff,
     Debuff,
     Mark,
-    Protect
+    Protect,
+    SwapPosition
+}
+[UGS(typeof(SkillEffectType))]
+public enum SkillEffectType
+{
+    Hit,
+    Projectile,
+    Cast,
 }
 [UGS(typeof(TargetType))]
 public enum TargetType
@@ -40,8 +49,17 @@ public enum WeaponType
     ShortSword,
     Knuckle,
     SwordAndShield,
-    Staff
+    Staff,
+    Accessory
 }
+[UGS(typeof(LoadOutType))]
+public enum LoadOutType
+{
+    Mercenary,
+    Weapon,
+    Item,
+}
+
 [UGS(typeof(BuffType))]
 public enum BuffType
 {
@@ -74,7 +92,8 @@ public enum ItemType
     None,
     Weapon,
     Consumable,
-    Gold
+    Gold,
+    Equipment
 }
 
 [UGS(typeof(ConsumableType))]
@@ -92,7 +111,8 @@ public enum EventType
 {
     Battle,
     Treasure,
-    Trap
+    Trap,
+    Boss
 }
 
 public enum RoomDirection
@@ -112,4 +132,11 @@ public enum RoomType
     Shop,
     PMC,
     Village
+}
+
+public enum CorridorMovement
+{
+    Left,
+    Stop,
+    Right
 }

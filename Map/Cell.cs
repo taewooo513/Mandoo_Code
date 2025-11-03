@@ -6,6 +6,8 @@ public class Cell
 {
     public bool hasEvent;
     public EventType cellEvent;
+
+    public bool AlreadyVisited;
     //private Image icon
 
     public void Init(bool Event = false)
@@ -15,6 +17,12 @@ public class Cell
         {
             cellEvent = (EventType)Random.Range(0, 3);
         }
+    }
+
+    public void Init(EventType eventType)
+    {
+        hasEvent = true;
+        cellEvent = eventType;
     }
 
     public void StartEvent()

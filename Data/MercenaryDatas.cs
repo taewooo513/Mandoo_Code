@@ -7,6 +7,21 @@ public class MercenaryDatas : MercenaryData
 {
     public MercenaryData GetMercenaryData(int idx)
     {
-        return MercenaryDataMap[idx];
+        if (!MercenaryDataMap.TryGetValue(idx, out MercenaryData data))
+        {
+            Debug.LogWarning($"[MercenaryDatas] ID {idx} not found in MercenaryDataMap!");
+            return null;
+        }
+        return data;
+    }
+
+    public List<int> GetMercenaryIdList()
+    {
+        return new List<int>(MercenaryDataMap.Keys);
+    }
+
+    public bool HasKey(int idx)
+    {
+        return MercenaryDataMap.ContainsKey(idx);
     }
 }

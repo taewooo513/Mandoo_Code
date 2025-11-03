@@ -1,9 +1,6 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
-using UnityEditor.Animations;
 using UnityEngine;
-using static UnityEditor.Experimental.GraphView.GraphView;
 
 public class PlayableCharacterAnimationController : EntityCharacterAnimationController
 {
@@ -19,22 +16,57 @@ public class PlayableCharacterAnimationController : EntityCharacterAnimationCont
         nowEntity = GetComponentInParent<PlayableCharacter>();
     }
 
-    public override void Attack(Action action, BaseEntity targetEntity)
+    public override void SetTrigger(string triggerName)
+    {
+        animator.SetTrigger(triggerName);
+    }
+
+    public override void FlipX(bool isFlip)
+    {
+        if (isFlip)
+        {
+            transform.localScale = new Vector3(-1.5f, 1.5f, 1);
+        }
+        else
+        {
+            transform.localScale = new Vector3(1.5f, 1.5f, 1);
+        }
+    }
+
+    public override void Attack(Action action, BaseEntity targetEntity, Skill skill)
     {
         animator.SetTrigger("Attack");
         this.targetEntity = targetEntity;
         targetEntity.characterAnimationController.LayerUp();
         LayerUp();
-        AudioManager.Instance.PlaySound("Sounds/Attack");
+        var path = skill.skillInfo.effectPath;
+        var type = skill.skillInfo.skillEffectType;
+        var dir = new Vector3(targetEntity.transform.position.x - nowEntity.transform.position.x, 0, 0);
+        // TODO: 데이터 테이블에 스킬 이펙트가 투사체인지 확인 후
+        if (type == SkillEffectType.Hit)
+            EffectManager.Instance.CreateEffect(path, targetEntity.transform.position); // 즉발 피격 이펙트 생성  
+        else
+            EffectManager.Instance.CreateEffect(path, nowEntity.transform.position, targetEntity.transform.position, dir); // 투사체나 캐스팅 이펙트 생성  
+        AudioManager.Instance.PlaySfx(AudioInfo.Instance.attackSfx, AudioInfo.Instance.attackSfxVolume);
         this.action = action;
     }
-    public override void Attack(Action action, List<BaseEntity> baseEntitys)
+    public override void Attack(Action action, List<BaseEntity> baseEntitys, Skill skill)
     {
         animator.SetTrigger("Attack");
         this.baseEntitys = baseEntitys;
         LayerUp();
+        var path = skill.skillInfo.effectPath;
+        var type = skill.skillInfo.skillEffectType;
+        var dir = new Vector3(baseEntitys[0].transform.position.x - nowEntity.transform.position.x, 0, 0);
+        foreach (var entity in baseEntitys)
+        {
+            if (type == SkillEffectType.Hit)
+                EffectManager.Instance.CreateEffect(path, entity.transform.position); // 즉발 피격 이펙트 생성  
+            else
+                EffectManager.Instance.CreateEffect(path, nowEntity.transform.position, entity.transform.position, dir); // 투사체나 캐스팅 이펙트 생성  
+        }
         baseEntitys.ForEach(baseEntity => { baseEntity.characterAnimationController.LayerUp(); });
-        AudioManager.Instance.PlaySound("Sounds/Attack");
+        AudioManager.Instance.PlaySfx(AudioInfo.Instance.attackSfx, AudioInfo.Instance.attackSfxVolume);
         this.action = action;
     }
 
@@ -58,20 +90,44 @@ public class PlayableCharacterAnimationController : EntityCharacterAnimationCont
         layers = new int[sprites.Length];
         for (int i = 0; i < sprites.Length; i++)
         {
-            layers[i] = sprites[i].sortingOrder;
-            sprites[i].sortingOrder += 50;
+            if (sprites[i] != null && layers[i] != 0)
+            {
+                layers[i] = sprites[i].sortingOrder;
+                sprites[i].sortingOrder += 50;
+            }
         }
-        BattleManager.Instance.blackOutImage.SetActive(true);
+
+        if (BattleManager.Instance.blackOutImage != null)
+        {
+            BattleManager.Instance.blackOutImage.SetActive(true);
+        }
+        else
+        {
+            BattleManager.Instance.InstantiateBlackOutImage();
+            BattleManager.Instance.blackOutImage.SetActive(true);
+        }
     }
 
     public override void LayerDown()
     {
+        if (this == null || gameObject == null) return;
         SpriteRenderer[] sprites = GetComponentsInChildren<SpriteRenderer>();
-        for (int i = 0; i < sprites.Length; i++)
+        if (sprites != null)
         {
-            sprites[i].sortingOrder = layers[i];
+            for (int i = 0; i < sprites.Length; i++)
+            {
+                sprites[i].sortingOrder = layers[i];
+            }
+
+            if (BattleManager.Instance.blackOutImage != null)
+            {
+                BattleManager.Instance.blackOutImage.SetActive(false);
+            }
+            else
+            {
+                BattleManager.Instance.InstantiateBlackOutImage();
+            }
         }
-        BattleManager.Instance.blackOutImage.SetActive(false);
     }
 
     public override void ActionEvent()
@@ -81,6 +137,7 @@ public class PlayableCharacterAnimationController : EntityCharacterAnimationCont
 
     public override void ActionEndEvent()
     {
+        if (this == null || gameObject == null) return;
         base.ActionEndEvent();
         LayerDown();
         if (targetEntity != null)
@@ -89,6 +146,6 @@ public class PlayableCharacterAnimationController : EntityCharacterAnimationCont
         }
         else
             baseEntitys.ForEach(baseEntity => { baseEntity.characterAnimationController.LayerDown(); });
-        BattleManager.Instance.EndTurn(false);
+        BattleManager.Instance.EndTurn(true);
     }
 }

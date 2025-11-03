@@ -1,8 +1,14 @@
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 
+public enum TutorialCorridorInit
+{
+    Trap,
+    Treasure,
+    Empty
+}
 public class Corridor : INavigatable
 {
     public List<Cell> CorridorCells = new();
@@ -11,6 +17,7 @@ public class Corridor : INavigatable
     public bool IsAlreadyMade;
     public RoomDirection Direction;
     public BaseRoom DestinationRoom;
+    public BaseRoom CurrentRoom;
     public bool AlreadyVisited;
     public void Enter(BaseRoom room = null)
     {
@@ -19,13 +26,19 @@ public class Corridor : INavigatable
     }
     public void EnterCorridor(BaseRoom room)
     {
+        AudioManager.Instance.PlayBGM(AudioInfo.Instance.corridorBGM, AudioInfo.Instance.corridorBGMVolume);
+
+        BattleManager.Instance.isCorridorBattle = true;
+        
         if (room == RoomA)
         {
             DestinationRoom = RoomA;
+            CurrentRoom = RoomB;
         }
         else
         {
             DestinationRoom = RoomB;
+            CurrentRoom = RoomA;
         }
         //Test();
     }
@@ -36,7 +49,30 @@ public class Corridor : INavigatable
     }
     public void ExitCorridor()
     {
+        AlreadyVisited = true;
+        BattleManager.Instance.isCorridorBattle = false;
+        if(GameManager.Instance.CurrentMapIndex == 0)
+        {
+            switch(AnalyticsManager.Instance.Step)
+            {
+                case 13:
+                    AnalyticsManager.Instance.SendEventStep(14);
+                    break;
+                case 19:
+                    AnalyticsManager.Instance.SendEventStep(20);
+                    break;
+                case 23:
+                    AnalyticsManager.Instance.SendEventStep(24);
+                    break;
+            }    
+        }
+            
         Travel(DestinationRoom);
+    }
+
+    public void ExitCorridorToCurrentRoom()
+    {
+        Travel(CurrentRoom);
     }
     public void MakeCells()
     {
@@ -46,6 +82,17 @@ public class Corridor : INavigatable
             CorridorCells.Add(cell);
         }
         CellInit();
+    }
+
+    public void MakeCells(int index, TutorialCorridorInit init)
+    {
+        for (int i = 0; i < 4; i++)
+        {
+            Cell cell = new Cell();
+            CorridorCells.Add(cell);
+        }
+        
+        CellInit(index, init);
     }
 
     private void CellInit()
@@ -67,6 +114,21 @@ public class Corridor : INavigatable
         for (int i = 0; i < CorridorCells.Count; i++)
         {
             CorridorCells[i].Init(randomEvent.Contains(i));
+        }
+    }
+
+    public void CellInit(int index, TutorialCorridorInit init)
+    {
+        switch (init)
+        {
+            case TutorialCorridorInit.Trap:
+                CorridorCells[index].Init(EventType.Trap);
+                break;
+            case TutorialCorridorInit.Treasure:
+                CorridorCells[index].Init(EventType.Treasure);
+                break;
+            case TutorialCorridorInit.Empty:
+                break;
         }
     }
     public void Init(BaseRoom roomA, BaseRoom roomB, RoomDirection direction)

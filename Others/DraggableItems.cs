@@ -11,7 +11,8 @@ public interface IDraggingObject
 {
     DragOrigin Origin { get; }
     int SlotIndex { get; }
-    Item item { get; }
+    InGameItem item { get; }
+    ItemDragDropManager DraggingManager { get; }
 }
 
 public interface IDroppingTarget

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -9,6 +9,7 @@ public class MapTest : MonoBehaviour
     void Start()
     {
         //UIManager.Instance.OpenUI<RestartGame>();
-        MapManager.Instance.Initialize();
+        //MapManager.Instance.Initialize();
+        DataManager.Instance.Initialize();
     }
 }

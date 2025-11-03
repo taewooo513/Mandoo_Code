@@ -7,6 +7,10 @@ public class ItemDatas : ItemData
 {
     public ItemData GetItemData(int index)
     {
-        return ItemDataList[index];
+        if (ItemDataMap.TryGetValue(index, out ItemData data))
+            return data;
+        
+        Debug.LogWarning($"ItemData not found: {index}");
+        return null;
     }
 }

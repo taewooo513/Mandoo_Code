@@ -1,8 +1,6 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using static UnityEditor.Experimental.GraphView.GraphView;
 
 public class EntityCharacterAnimationController : MonoBehaviour
 {
@@ -14,11 +12,20 @@ public class EntityCharacterAnimationController : MonoBehaviour
         animator = GetComponent<Animator>();
     }
 
-    public virtual void Attack(Action action, BaseEntity baseEntity)
+    public virtual void SetTrigger(string triggerName)
+    {
+        
+    }
+
+    public virtual void FlipX(bool isFlip)
+    {
+        
+    }
+    public virtual void Attack(Action action, BaseEntity baseEntity, Skill skill)
     {
 
     }
-    public virtual void Attack(Action action, List<BaseEntity> baseEntitys)
+    public virtual void Attack(Action action, List<BaseEntity> baseEntitys, Skill skill)
     {
 
     }

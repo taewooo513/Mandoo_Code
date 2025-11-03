@@ -1,4 +1,4 @@
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using DataTable;
@@ -9,5 +9,4 @@ public class EffectDatas : EffectData
     {
         return EffectDataMap[idx];
     }
-
 }

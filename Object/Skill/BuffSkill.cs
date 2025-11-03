@@ -10,4 +10,12 @@ public class BuffSkill : SkillEffect
         statEffectInfo.Init(adRatio, duration, constantValue, actionEntity, buffType, debuffType);
         targetEntity.AddEffect(statEffectInfo);
     }
+
+    public override void ActiveEffect(BaseEntity targetEntity)
+    {
+        BuffInfo statEffectInfo = new BuffInfo();
+        statEffectInfo.Init(adRatio, duration, constantValue, null, buffType, debuffType);
+        targetEntity.AddEffect(statEffectInfo);
+        BattleManager.Instance.OnceUseItem();
+    }
 }

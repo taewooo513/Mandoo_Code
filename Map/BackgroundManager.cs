@@ -21,6 +21,7 @@ public class BackgroundManager : Singleton<BackgroundManager>
             if (_background == null) InstantiateBackgrounds();
             UIManager.Instance.OpenUI<FadeInOut>().FadeOut(fadeOutTime); //페이드아웃
             _background.gameObject.SetActive(true);
+            _corridorBackground.DestroyGameObjects();
             _corridorBackground.gameObject.SetActive(false);
             _spriteRenderer.sprite = Resources.Load<Sprite>(room.GetBackgroundPath());
         }
@@ -30,7 +31,7 @@ public class BackgroundManager : Singleton<BackgroundManager>
             UIManager.Instance.OpenUI<FadeInOut>().FadeOut(fadeOutTime); //페이드아웃
             _corridorBackground.gameObject.SetActive(true);
             _background.gameObject.SetActive(false);
-            _corridorBackground.gameObject.transform.position = new Vector3(19.8f, -0.5f, 0);
+            _corridorBackground.gameObject.transform.position = new Vector3(8.0f, -0.5f, 0);
             _corridorBackground.Init();
         }
         UIManager.Instance.OpenUI<FadeInOut>().FadeIn(fadeInTime); //페이드인 해서 화면 밝게

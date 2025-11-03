@@ -11,6 +11,10 @@ public static class SceneKey
     public const string gameScene1 = "GameScene1";
     public const string endingScene = "EndingScene";
     public const string testScene = "TestScene";
+    public const string mapTest = "MapTest";
+    public const string titleScene = "TitleScene";
+    public const string inGameScene = "InGameScene";
+    public const string tutorialScene = "TutorialScene";
 }
 
 public class SceneLoadManager : Singleton<SceneLoadManager>
@@ -30,6 +34,11 @@ public class SceneLoadManager : Singleton<SceneLoadManager>
         AddScene(SceneKey.gameScene1, new GameScene1());
         AddScene(SceneKey.endingScene, new EndingScene());
         AddScene(SceneKey.testScene, new TestScene());
+        //AddScene(SceneKey.mapTest, new MapTest());
+
+        AddScene(SceneKey.titleScene, new TitleScene());
+        AddScene(SceneKey.inGameScene, new InGameScene());
+        AddScene(SceneKey.tutorialScene, new TutorialScene());
     }
 
     public void AddScene(string key, BaseScene baseScene)
@@ -70,7 +79,7 @@ public class SceneLoadManager : Singleton<SceneLoadManager>
         {
             yield return null;
         }
-        
+
         nowScene.LoadResources();
         nowScene.Init();
     }

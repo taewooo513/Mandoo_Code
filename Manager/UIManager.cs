@@ -14,6 +14,8 @@ public class UIManager : Singleton<UIManager>
 
     private Dictionary<string, UIBase> _uiDictionary = new();
 
+    public event Action<object, bool> OnUIVisibilityChanged;
+
     private bool IsExistUI<T>() where T : UIBase
     {
         var uiName = typeof(T).Name;
@@ -35,8 +37,19 @@ public class UIManager : Singleton<UIManager>
             ui?.CloseUI();
         }
     }
+    public T UIGet<T>() where T : UIBase
+    {
+        var uiName = typeof(T).Name;
+        UIBase ui = IsExistUI<T>() ? _uiDictionary[uiName] : null;
+        if (ui == null)
+        {
+            ui = CreateUI<T>();
+            ui.CloseUI();
+        }
+        return ui as T;
+    }
 
-    private T GetUI<T>() where T : UIBase
+    public T GetUI<T>() where T : UIBase
     {
         var uiName = typeof(T).Name;
         UIBase ui;
@@ -203,4 +216,5 @@ public class UIManager : Singleton<UIManager>
         _uiDictionary.Clear();
     }
 
+    public void RaiseUIVisibilityChanged(object obj, bool isActive) => OnUIVisibilityChanged?.Invoke(obj, isActive);
 }

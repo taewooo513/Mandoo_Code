@@ -18,8 +18,11 @@ public class BuffIconFactory
             case BuffType.AllStatUp:
                 path = "AllStatUp";
                 break;
+            case BuffType.DefenseUp:
+                path = "DefenseUp";
+                break;
             case BuffType.EvasionUp:
-                path = "EvasionUp";
+                path = "EvaUp";
                 break;
             case BuffType.CriticalUp:
                 path = "CriticalUp";
@@ -36,8 +39,11 @@ public class BuffIconFactory
             case DeBuffType.AllStatDown:
                 path = "AllStatDown";
                 break;
+            case DeBuffType.DefenseDown:
+                path = "DefenseDown";
+                break;
             case DeBuffType.EvasionDown:
-                path = "EvasionDown";
+                path = "EvaDown";
                 break;
             case DeBuffType.CriticalDown:
                 path = "CriticalDown";

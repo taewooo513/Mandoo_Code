@@ -6,7 +6,7 @@ using UnityEngine.UI;
 public class NotActiveTrapUI : MonoBehaviour
 {
     public Button notActiveTrapButton;
-    [SerializeField] private RangeCheck _rangeCheck;
+    [SerializeField] protected RangeCheck _rangeCheck;
     public GameObject outline;
     
     public void Start()

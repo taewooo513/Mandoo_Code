@@ -29,6 +29,7 @@ public class InGameBattleStartUI : UIBase
         // {
         //     yield return StartCoroutine(fadeInOut.FadeOutCoroutine());
         // }
+        BattleManager.Instance.StartTurn();
         base.CloseUI();
     }
 }

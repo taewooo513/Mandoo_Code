@@ -15,7 +15,7 @@ public class HpbarUI : MonoBehaviour
     }
     public void UpdateUI()
     {
-        if (hpBar != null || entity != null)
+        if (hpBar != null && entity != null)
         {
             float val = 1f / entity.entityInfo.maxHp * entity.entityInfo.currentHp;
             if (val < 0f)
