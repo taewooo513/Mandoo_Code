@@ -43,12 +43,9 @@ https://www.youtube.com/watch?v=f5Qd2yA9-lQ
 ![Image](/Resource/broshue.gif)
 - 전투 - 용병 - 상점 - 함정 - 보물 -
 
-![보물](attachment:12465e98-d66c-49cd-a20e-d3f79ceaac6a:Treasure.png)
-
 
 **매번 달라지는 이벤트** 속에서 어디로 갈지, 어떤 자원을 소비할지 **끊임없는 판단**을 요구합니다.
 
-![broshue.gif](attachment:5067a26e-ef16-4b4d-ae6f-ddef710ca9b0:broshue.gif)
 
 ### **⚔️ 차별화된 성장 ‘무기 숙련도’ 시스템**
 
@@ -58,18 +55,18 @@ https://www.youtube.com/watch?v=f5Qd2yA9-lQ
 같은 용병이라도 어떤 무기를 다뤘는지에 따라
 **전투 스타일과 전략**이 완전히 달라집니다.
 
-![Weapon_Tutorial_01.gif](attachment:5ed19fd7-72ef-4031-b91b-2f85721eca62:Weapon_Tutorial_01.gif)
+![Image](/Resource/Weapon_Tutorial_01.gif)
 
 ### 🔁 반복 속에서 달라지는 탐험
 
 **완전히 랜덤으로 생성되는 맵**과 **로드아웃 선택**으로 매 판 새로운 조합과 전략이 만들어집니다.
 이전의 경험은 다음 탐험에 영향을 미치며, 반복 플레이 속에서 더 큰 성장과 성취가 쌓입니다.
 
-![맵 생성 Gif.gif](attachment:dac8ead3-ce48-41bd-976f-2a83b987896f:맵_생성_Gif.gif)
+![Image](/Resource/맵 생성 Gif.gif)
 
-![image.png](attachment:94c96b36-a456-4dfc-a059-9af535170d6e:image.png)
+![Image](/Resource/image.png)
 
-![image.png](attachment:c6a4bc46-25af-4c8b-9844-3defe4414ae0:image.png)
+![Image](/Resource/image (3).png)
 
 ### **향후에는…**
 
