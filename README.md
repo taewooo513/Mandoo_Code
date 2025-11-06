@@ -1,4 +1,4 @@
-![Image](/Resource/870dd150dc51c803.gif)
+![Image](/Resource/beosimttnk_httpss.mj.runLaJriHwd1GY_move_fire_darkness_sky_--_f6426a9d-c0b2-4305-97e1-3a4e519c3337_1.gif)
 ---
 
 <aside>
@@ -40,25 +40,11 @@ https://www.youtube.com/watch?v=f5Qd2yA9-lQ
 
 ### 🧭 모험을 하며 발생하는 전략적인 선택
 
-![전투](attachment:fe2b6371-f0d1-4b8e-b95b-3b6c9d20d73c:Battle.png)
-
-전투
-
-![용병](attachment:1ff9832a-0db2-4439-a27f-bcb8896e9a5a:PMC.png)
-
-용병
-
-![상점](attachment:398f436f-3353-4290-a52a-2e51d60ca385:Shop.png)
-
-상점
-
-![함정](attachment:2c1eac2b-1ef0-42f1-b6aa-aeac9bbdb3d7:Trap.png)
-
-함정
+![Image](/Resource/broshue.gif)
+- 전투 - 용병 - 상점 - 함정 - 보물 -
 
 ![보물](attachment:12465e98-d66c-49cd-a20e-d3f79ceaac6a:Treasure.png)
 
-보물
 
 **매번 달라지는 이벤트** 속에서 어디로 갈지, 어떤 자원을 소비할지 **끊임없는 판단**을 요구합니다.
 
