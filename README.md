@@ -7,7 +7,7 @@
 # “짧지만 밀도 있는 전략 경험”
 
 https://www.youtube.com/watch?v=f5Qd2yA9-lQ
-
+./Resource/870dd150dc51c803.gif
 </aside>
 
 <aside>
