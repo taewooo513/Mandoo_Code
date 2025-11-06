@@ -1,4 +1,4 @@
-[Image](/Resource/870dd150dc51c803.gif)
+![Image](/Resource/870dd150dc51c803.gif)
 ---
 
 <aside>
