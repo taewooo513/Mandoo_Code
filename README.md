@@ -1,5 +1,4 @@
-![beosimttnk_httpss.mj.runLaJriHwd1GY_move_fire_darkness_sky_--_f6426a9d-c0b2-4305-97e1-3a4e519c3337_1.gif](attachment:a5447eac-9f11-4dde-a936-0f03b48b9166:beosimttnk_httpss.mj.runLaJriHwd1GY_move_fire_darkness_sky_--_f6426a9d-c0b2-4305-97e1-3a4e519c3337_1.gif)
-
+[Image](/Resource/870dd150dc51c803.gif)
 ---
 
 <aside>
