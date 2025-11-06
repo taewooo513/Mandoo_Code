@@ -80,14 +80,14 @@ https://www.youtube.com/watch?v=f5Qd2yA9-lQ
 
 ---
 
-- [게임 기능 소개](https://www.notion.so/6-EAT-2992dc3ef51480abb1dfd1949b777bf9?pvs=21)
-- [게임 흐름 & 설계](https://www.notion.so/6-EAT-2992dc3ef51480abb1dfd1949b777bf9?pvs=21)
-- [사용된 기술 스택](https://www.notion.so/6-EAT-2992dc3ef51480abb1dfd1949b777bf9?pvs=21)
-- [구현 기술 & 개발 기법](https://www.notion.so/6-EAT-2992dc3ef51480abb1dfd1949b777bf9?pvs=21)
-- [개인 트러블 슈팅](https://www.notion.so/6-EAT-2992dc3ef51480abb1dfd1949b777bf9?pvs=21)
-- [사용자 개선 사항](https://www.notion.so/6-EAT-2992dc3ef51480abb1dfd1949b777bf9?pvs=21)
-- [프로젝트 결과 및 성과](https://www.notion.so/6-EAT-2992dc3ef51480abb1dfd1949b777bf9?pvs=21)
-- [팀원 구성](https://www.notion.so/6-EAT-2992dc3ef51480abb1dfd1949b777bf9?pvs=21)
+- [게임 기능 소개]
+- [게임 흐름 & 설계]
+- [사용된 기술 스택]
+- [구현 기술 & 개발 기법]
+- [개인 트러블 슈팅]
+- [사용자 개선 사항]
+- [프로젝트 결과 및 성과]
+- [팀원 구성]
 
 ## 게임 기능 소개
 
