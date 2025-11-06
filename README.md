@@ -62,11 +62,11 @@ https://www.youtube.com/watch?v=f5Qd2yA9-lQ
 **완전히 랜덤으로 생성되는 맵**과 **로드아웃 선택**으로 매 판 새로운 조합과 전략이 만들어집니다.
 이전의 경험은 다음 탐험에 영향을 미치며, 반복 플레이 속에서 더 큰 성장과 성취가 쌓입니다.
 
-![Image](/Resource/맵 생성 Gif.gif)
+![Image](/Resource/map.gif)
 
 ![Image](/Resource/image.png)
 
-![Image](/Resource/image (3).png)
+![Image](/Resource/image_3.png)
 
 ### **향후에는…**
 
@@ -96,16 +96,16 @@ https://www.youtube.com/watch?v=f5Qd2yA9-lQ
 - 타이틀
     
     
-    ![메인 타이틀 화면](attachment:34b69676-4ff9-44c2-b0be-ae499e5fe144:image.png)
+   ![Image](/Resource/image_2.png)
     
     메인 타이틀 화면
     
-    ![게임 시작 클릭 시 등장하는 로드아웃](attachment:c902272b-8089-4ddc-80cd-1f7ebf0ffee0:image.png)
-    
+   ![Image](/Resource/image_3.png)
+  
     게임 시작 클릭 시 등장하는 로드아웃
     
-    ![스테이지 선택](attachment:0e1fb6a5-d220-423e-be48-68f05445f48e:image.png)
-    
+    ![Image](/Resource/image_4.png)
+  
     스테이지 선택
     
     - 메인 타이틀 화면
@@ -113,11 +113,11 @@ https://www.youtube.com/watch?v=f5Qd2yA9-lQ
         - 로드아웃
             
             
-            ![로드아웃 상점](attachment:f9b0c811-68f2-4110-8fbb-d83a26a83fe0:image.png)
-            
+            ![Image](/Resource/image_14.png)
+          
             로드아웃 상점
             
-            ![로드아웃 업적](attachment:e22eb2a5-3e74-452e-91bd-dafe01040a02:image.png)
+            ![Image](/Resource/image_5.png)
             
             로드아웃 업적
             
@@ -129,7 +129,7 @@ https://www.youtube.com/watch?v=f5Qd2yA9-lQ
     - 스테이지 → 현재 스테이지 클리어 시 다음 스테이지 오픈
 - 튜토리얼
     
-    ![튜토리얼 이미지](attachment:6ec9b5cf-084c-48f0-9bac-20ad471c62dd:image.png)
+    ![Image](/Resource/image_21.png)
     
     튜토리얼 이미지
     
@@ -140,19 +140,19 @@ https://www.youtube.com/watch?v=f5Qd2yA9-lQ
         - 방 : 전투/ 보물 상자/ 용병 고용/ 상점 방 중 랜덤으로 하나가 등장함.
         - 통로 : 방과 방을 잇는 길 (함정, 보물상자 등의 이벤트 존재함)
         
-        ![유니티 최종프로젝트 편집.jpg](attachment:2b8b4f76-ca85-4894-b8b4-0cd76924f03c:유니티_최종프로젝트_편집.jpg)
+        ![Image](/Resource/image_22.png)
         
     - 방에서는 플레이어 이동 불가능
     - 빨간색 테두리가 있는 ‘방’을 클릭 → 통로로 이동 (플레이어 이동 가능)
         
-        ![‘방’ 클릭 → 통로 이동](attachment:4a5e00f6-b15d-4483-80ad-8802c0ca46f9:이동.gif)
+        ![Image](/Resource/image_23.gif)
         
         ‘방’ 클릭 → 통로 이동
         
 - 전투 (전투 방식)
     - 턴 진행
         
-        ![턴 주고 받기](attachment:05e546c2-8409-4b55-8326-b3a604ece441:전투_시작.gif)
+        ![Image](/Resource/image_24.gif)
         
         턴 주고 받기
         
@@ -180,20 +180,20 @@ https://www.youtube.com/watch?v=f5Qd2yA9-lQ
     - 스킬
         
         
-        ![스킬 버튼을 클릭했을 때 (타겟팅 범위 붉은색 표시)](attachment:2e4474db-be5d-4565-9546-f7a5665a46fc:image.png)
+        ![Image](/Resource/image_25.png)
         
         스킬 버튼을 클릭했을 때 (타겟팅 범위 붉은색 표시)
         
-        ![적을 클릭해서 스킬 사용했을 때](attachment:c37eb254-59ef-4314-960d-e5a50e52fb81:image.png)
-        
+        ![Image](/Resource/image_26.png)
+      
         적을 클릭해서 스킬 사용했을 때
         
         - 스킬 버튼 클릭 → 스킬 범위(붉은색 표시)의 적을 클릭하면 스킬 사용됨
 - 용병
     - 무기 숙련도
         
-        ![무기 숙련도 이미지](attachment:a71ca503-b769-4cc6-ab30-e2994c360712:Weapon_Tutorial_01.gif)
-        
+       ![Image](/Resource/image_27.gif)
+       
         무기 숙련도 이미지
         
         - 장비 장착 시 ‘숙련도’ 시스템이 열림
@@ -201,8 +201,8 @@ https://www.youtube.com/watch?v=f5Qd2yA9-lQ
         - 숙련도를 다 채우면 무기 스킬 & 외형 업그레이드
     - 용병 고용
         
-        ![용병 고용 개꿀잼버전.gif](attachment:fb0d3bbf-b0f2-4696-af03-f6eb5af420e5:용병_고용_개꿀잼버전.gif)
-        
+        ![Image](/Resource/image_28.gif)
+      
         - ‘용병 고용 방’에서 용병 고용/해고 가능
         - 용병마다 다른 특성을 가짐
 - 아이템
@@ -210,17 +210,17 @@ https://www.youtube.com/watch?v=f5Qd2yA9-lQ
         - 전투 승리 or 보물 상자 오픈 시 재화/아이템 획득 가능
         - 상점에서 재화로 구매/판매 가능
         
-        ![보상 UI](attachment:834ea758-50c3-401b-a74b-30eb4dc7f726:image.png)
-        
+       ![Image](/Resource/image_29.png)
+      
         보상 UI
         
-        ![상점 이미지](attachment:b02b22cd-7d2b-4beb-9113-86433f579a2a:065e4de9-7b42-481b-b165-0d8f1c54ce1d.png)
+        ![Image](/Resource/image_30.png)
         
         상점 이미지
         
     - 인벤토리
         
-        ![플레이어 정보 창                                                                            인벤토리 창](attachment:92294cd6-458e-436b-af38-c29772bd07db:스크린샷_2025-11-04_오후_12.38.11.png)
+        ![Image](/Resource/image_31.png)
         
         플레이어 정보 창                                                                            인벤토리 창
         
@@ -235,12 +235,12 @@ https://www.youtube.com/watch?v=f5Qd2yA9-lQ
     - 툴팁 (정보창)
         - 마우스 커서를 원하는 스킬/아이템 위에 올리면 툴팁 표시
         
-        ![마우스 커서를 ‘물약’ 위에 올린 상태](attachment:8b940f93-3cd7-4510-893a-0629429f140f:image.png)
-        
+        ![Image](/Resource/image_32.png)
+      
         마우스 커서를 ‘물약’ 위에 올린 상태
         
-        ![마우스 커서를 ‘2번째 스킬’ 위에 올린 상태](attachment:ed184d7b-be4b-4b8c-a1eb-27a619657cb6:image.png)
-        
+        ![Image](/Resource/image_33.png)
+      
         마우스 커서를 ‘2번째 스킬’ 위에 올린 상태
         
 
